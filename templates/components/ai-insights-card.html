@@ -1,0 +1,219 @@
+<div class="ai-insights-card glass-card">
+    <div class="insights-header">
+        <h3>
+            <i class="fas fa-robot"></i>
+            AI Insights
+        </h3>
+        <div class="insights-actions">
+            <button class="btn-icon" title="Refresh insights">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="insights-content">
+        {% if insights %}
+        <div class="insight-item">
+            <div class="insight-icon insight-positive">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="insight-text">
+                <h4>Performance Trend</h4>
+                <p>{{ insights.today_insight }}</p>
+                <span class="insight-time">Updated just now</span>
+            </div>
+        </div>
+        
+        <div class="insight-item">
+            <div class="insight-icon insight-predictive">
+                <i class="fas fa-crystal-ball"></i>
+            </div>
+            <div class="insight-text">
+                <h4>Tomorrow's Forecast</h4>
+                <p>{{ insights.tomorrow_prediction }}</p>
+                <span class="insight-time">Based on your patterns</span>
+            </div>
+        </div>
+        
+        <div class="insight-item">
+            <div class="insight-icon insight-recommendation">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <div class="insight-text">
+                <h4>Smart Recommendation</h4>
+                <p>{{ insights.recommendation }}</p>
+                <span class="insight-time">AI suggested</span>
+            </div>
+        </div>
+        {% else %}
+        <div class="no-insights">
+            <i class="fas fa-brain"></i>
+            <p>Complete more tasks to get personalized AI insights</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="insights-footer">
+        <div class="confidence-meter">
+            <span>AI Confidence: 94%</span>
+            <div class="confidence-bar">
+                <div class="confidence-fill" style="width: 94%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.ai-insights-card {
+    padding: 1.5rem;
+}
+
+.insights-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.insights-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.125rem;
+    margin: 0;
+    background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.insights-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.insight-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.insight-item:hover {
+    transform: translateX(5px);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.insight-positive {
+    border-left-color: var(--accent-glow);
+}
+
+.insight-predictive {
+    border-left-color: var(--primary-glow);
+}
+
+.insight-recommendation {
+    border-left-color: #ff64ff;
+}
+
+.insight-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+    flex-shrink: 0;
+}
+
+.insight-positive .insight-icon {
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--accent-glow);
+}
+
+.insight-predictive .insight-icon {
+    background: rgba(0, 255, 255, 0.1);
+    color: var(--primary-glow);
+}
+
+.insight-recommendation .insight-icon {
+    background: rgba(255, 100, 255, 0.1);
+    color: #ff64ff;
+}
+
+.insight-text {
+    flex: 1;
+}
+
+.insight-text h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.insight-text p {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.insight-time {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.no-insights {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-secondary);
+}
+
+.no-insights i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.no-insights p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.insights-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--glass-border);
+}
+
+.confidence-meter {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.confidence-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-glow), var(--accent-glow));
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+</style>

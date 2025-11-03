@@ -1,0 +1,670 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - AI Productivity Intelligence{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-user-circle"></i>
+        Your Profile
+    </h1>
+    <p class="page-subtitle">Manage your account and view personal statistics</p>
+</div>
+
+<div class="profile-grid">
+    <!-- Profile Card -->
+    <div class="glass-card profile-card">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <i class="fas fa-user-astronaut"></i>
+            </div>
+            <div class="profile-info">
+                <h2>{{ current_user.username }}</h2>
+                <p>{{ current_user.position }} • {{ current_user.department }}</p>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-value">#8</span>
+                        <span class="stat-label">Rank</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">82.1</span>
+                        <span class="stat-label">Score</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">47</span>
+                        <span class="stat-label">Tasks</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-details">
+            <div class="detail-item">
+                <label><i class="fas fa-envelope"></i> Email</label>
+                <span>{{ current_user.email }}</span>
+            </div>
+            <div class="detail-item">
+                <label><i class="fas fa-calendar"></i> Member Since</label>
+                <span>{{ current_user.created_at.strftime('%B %d, %Y') }}</span>
+            </div>
+            <div class="detail-item">
+                <label><i class="fas fa-clock"></i> Last Login</label>
+                <span>{{ current_user.last_login.strftime('%B %d, %Y at %H:%M') if current_user.last_login else 'First login' }}</span>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            <button class="btn btn-primary" onclick="openEditModal()">
+                <i class="fas fa-edit"></i>
+                Edit Profile
+            </button>
+            <button class="btn btn-secondary">
+                <i class="fas fa-download"></i>
+                Export Data
+            </button>
+        </div>
+    </div>
+
+    <!-- Monthly Report Card -->
+    <div class="glass-card report-card">
+        <h3>Monthly Performance Report</h3>
+        <div class="report-stats">
+            <div class="report-metric">
+                <div class="metric-circle" data-value="82">
+                    <svg class="circle-chart" viewBox="0 0 36 36" width="80" height="80">
+                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="circle" stroke-dasharray="82, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <text x="18" y="20.35" class="percentage">82%</text>
+                    </svg>
+                </div>
+                <span>Overall Score</span>
+            </div>
+            <div class="report-metric">
+                <div class="metric-value">+5.2%</div>
+                <span>vs Last Month</span>
+            </div>
+            <div class="report-metric">
+                <div class="metric-value">47</div>
+                <span>Tasks Done</span>
+            </div>
+        </div>
+        
+        <div class="ai-summary">
+            <h4>AI Analysis</h4>
+            <p>Your productivity has shown consistent improvement this month. Your peak performance occurs between 10 AM - 2 PM. Consider scheduling complex tasks during this window.</p>
+        </div>
+        
+        <button class="btn btn-outline" style="width: 100%; margin-top: 15px;">
+            <i class="fas fa-file-pdf"></i>
+            Download Full Report
+        </button>
+    </div>
+
+    <!-- Badges Collection -->
+    <div class="glass-card badges-card">
+        <h3>Your Badges</h3>
+        <div class="badges-collection">
+            {% for i in range(8) %}
+            <div class="badge-collection-item {% if i < 3 %}earned{% else %}locked{% endif %}">
+                <div class="badge-icon">
+                    {% if i < 3 %}
+                    {{ ['🏆', '⭐', '🚀'][i] }}
+                    {% else %}
+                    <i class="fas fa-lock"></i>
+                    {% endif %}
+                </div>
+                <div class="badge-details">
+                    <h5>{{ ['Focus Master', 'Early Bird', 'Task Maestro', 'Consistency King', 'Deadline Crusher', 'Team Player', 'Improvement Champ', 'Night Owl'][i] }}</h5>
+                    <p>{{ ['Maintain 85%+ focus ratio', 'Log in before 9 AM consistently', 'Complete 50+ tasks monthly', 'Sustain 80%+ productivity for 2 weeks', 'Complete all tasks before deadlines', 'High collaboration score', 'Show steady improvement', 'Peak performance in late hours'][i] }}</p>
+                </div>
+                {% if i < 3 %}
+                <span class="badge-status earned">Earned</span>
+                {% else %}
+                <span class="badge-status locked">Locked</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Activity History -->
+    <div class="glass-card activity-card">
+        <h3>Recent Activity</h3>
+        <div class="activity-timeline">
+            {% for i in range(5) %}
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="fas fa-{{ ['chart-line', 'tasks', 'trophy', 'calendar', 'user-friends'][i] }}"></i>
+                </div>
+                <div class="activity-content">
+                    <p>{{ ['Achieved 92% productivity score', 'Completed 5 tasks ahead of schedule', 'Earned Focus Master badge', 'Maintained 7-day streak', 'Collaborated with team on project'][i] }}</p>
+                    <span class="activity-time">{{ ['2 hours ago', '5 hours ago', '1 day ago', '2 days ago', '3 days ago'][i] }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Productivity Trends -->
+    <div class="glass-card trends-card">
+        <h3>Productivity Trends</h3>
+        <div class="trends-chart">
+            <canvas id="profileTrendsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content glass-card">
+        <div class="modal-header">
+            <h3>Edit Profile</h3>
+            <button class="close-btn" onclick="closeEditModal()">&times;</button>
+        </div>
+        <form class="modal-form">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" value="{{ current_user.username }}" class="form-input">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" value="{{ current_user.email }}" class="form-input">
+            </div>
+            <div class="form-group">
+                <label>Department</label>
+                <input type="text" value="{{ current_user.department }}" class="form-input">
+            </div>
+            <div class="form-group">
+                <label>Position</label>
+                <input type="text" value="{{ current_user.position }}" class="form-input">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openEditModal() {
+    document.getElementById('editModal').style.display = 'flex';
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('editModal');
+    if (event.target === modal) {
+        closeEditModal();
+    }
+}
+
+// Initialize trends chart
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('profileTrendsChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            datasets: [{
+                label: 'Productivity Score',
+                data: [75, 82, 78, 85],
+                borderColor: '#00ffff',
+                backgroundColor: 'rgba(0, 255, 255, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: '#ffffff'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: '#ffffff'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+
+<style>
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.profile-card {
+    grid-column: 1;
+}
+
+.report-card {
+    grid-column: 2;
+}
+
+.badges-card {
+    grid-column: 1;
+}
+
+.activity-card {
+    grid-column: 2;
+}
+
+.trends-card {
+    grid-column: 1 / -1;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--bg-dark);
+}
+
+.profile-info h2 {
+    margin-bottom: 5px;
+    font-size: 1.75rem;
+}
+
+.profile-info p {
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.profile-details {
+    margin-bottom: 30px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-item label {
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detail-item label i {
+    width: 16px;
+    color: var(--primary-glow);
+}
+
+.profile-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+}
+
+.btn-outline:hover {
+    border-color: var(--primary-glow);
+    color: var(--primary-glow);
+}
+
+/* Report Card Styles */
+.report-stats {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.report-metric {
+    text-align: center;
+}
+
+.metric-circle {
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.circle-chart {
+    transform: rotate(-90deg);
+}
+
+.circle-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 2;
+}
+
+.circle {
+    fill: none;
+    stroke: var(--primary-glow);
+    stroke-width: 2;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.3s ease;
+}
+
+.percentage {
+    fill: var(--text-primary);
+    font-size: 0.4em;
+    text-anchor: middle;
+    font-weight: bold;
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+    background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.report-metric span {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.ai-summary {
+    padding: 15px;
+    background: rgba(0, 255, 255, 0.05);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-glow);
+}
+
+.ai-summary h4 {
+    margin-bottom: 8px;
+    color: var(--primary-glow);
+}
+
+.ai-summary p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Badges Collection */
+.badges-collection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.badge-collection-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.badge-collection-item.earned {
+    border-color: var(--accent-glow);
+}
+
+.badge-collection-item.locked {
+    opacity: 0.6;
+}
+
+.badge-collection-item:hover {
+    transform: translateX(5px);
+}
+
+.badge-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.badge-details {
+    flex: 1;
+}
+
+.badge-details h5 {
+    margin-bottom: 4px;
+    font-size: 0.875rem;
+}
+
+.badge-details p {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.badge-status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-status.earned {
+    background: var(--accent-glow);
+    color: var(--bg-dark);
+}
+
+.badge-status.locked {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+}
+
+/* Activity Timeline */
+.activity-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+}
+
+.activity-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(0, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-glow);
+    flex-shrink: 0;
+}
+
+.activity-content p {
+    margin-bottom: 4px;
+    font-size: 0.875rem;
+}
+
+.activity-time {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Trends Chart */
+.trends-chart {
+    height: 200px;
+    position: relative;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-card,
+    .report-card,
+    .badges-card,
+    .activity-card,
+    .trends-card {
+        grid-column: 1;
+    }
+    
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-stats {
+        justify-content: center;
+    }
+    
+    .report-stats {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .profile-actions {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}

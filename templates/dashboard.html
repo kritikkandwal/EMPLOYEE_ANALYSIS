@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Productivity Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.module.js"></script>
+</head>
+<body class="futuristic-theme">
+    <!-- Three.js Background -->
+    <div id="three-background" class="three-background"></div>
+    
+    <!-- Main Layout -->
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        {% include 'components/sidebar.html' %}
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            {% include 'components/navbar.html' %}
+            
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid">
+                
+                <!-- Productivity Overview Card -->
+                <div class="glass-card overview-card">
+                    <h2 class="card-title">Productivity Overview</h2>
+                    <div class="productivity-gauge">
+                        <div class="gauge">
+                            <div class="gauge-fill"></div>
+                            <div class="gauge-cover">
+                                <span class="gauge-score">{{ metrics.productivity_score }}</span>
+                                <span class="gauge-label">Current Score</span>
+                            </div>
+                        </div>
+                        <div class="metric-stats">
+                            <div class="metric">
+                                <span class="metric-value">{{ metrics.focus_ratio * 100 }}%</span>
+                                <span class="metric-label">Focus Ratio</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value">{{ metrics.task_efficiency }}%</span>
+                                <span class="metric-label">Task Efficiency</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value {% if metrics.weekly_trend > 0 %}positive{% else %}negative{% endif %}">
+                                    {{ metrics.weekly_trend }}%
+                                </span>
+                                <span class="metric-label">Weekly Trend</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Insights Card -->
+                <div class="glass-card insights-card">
+                    <h2 class="card-title">AI Insights</h2>
+                    <div class="insights-content">
+                        <div class="insight-item">
+                            <div class="insight-icon">🧠</div>
+                            <div class="insight-text">
+                                <h4>Today's Analysis</h4>
+                                <p>{{ insights.today_insight }}</p>
+                            </div>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-icon">🔮</div>
+                            <div class="insight-text">
+                                <h4>Tomorrow's Forecast</h4>
+                                <p>{{ insights.tomorrow_prediction }}</p>
+                            </div>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-icon">💡</div>
+                            <div class="insight-text">
+                                <h4>Recommendation</h4>
+                                <p>{{ insights.recommendation }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Productivity Trend Chart -->
+                <div class="glass-card chart-card">
+                    <h2 class="card-title">Productivity Trend</h2>
+                    <div class="chart-container">
+                        <canvas id="productivityChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Focus Distribution -->
+                <div class="glass-card chart-card">
+                    <h2 class="card-title">Focus Distribution</h2>
+                    <div class="chart-container">
+                        <canvas id="focusChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Badges & Achievements -->
+                <div class="glass-card badges-card">
+                    <h2 class="card-title">Your Badges</h2>
+                    <div class="badges-grid">
+                        {% for badge in badges %}
+                        <div class="badge-item {{ badge.level }}">
+                            <div class="badge-icon">🏆</div>
+                            <div class="badge-info">
+                                <h4>{{ badge.name }}</h4>
+                                <p>{{ badge.description }}</p>
+                            </div>
+                            <span class="badge-level">{{ badge.level }}</span>
+                        </div>
+                        {% else %}
+                        <div class="no-badges">
+                            <p>Complete more tasks to earn badges!</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Skills Radar Chart -->
+                <div class="glass-card chart-card">
+                    <h2 class="card-title">Performance Analysis</h2>
+                    <div class="chart-container">
+                        <canvas id="skillsRadarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script type="module" src="{{ url_for('static', filename='js/threejs-scene.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/lenis-smoothscroll.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+</body>
+</html>
