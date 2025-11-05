@@ -9,45 +9,39 @@
     <script type="module" src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.module.js"></script>
 </head>
 <body class="futuristic-theme">
-    <!-- Three.js Background -->
     <div id="three-background" class="three-background"></div>
     
-    <!-- Main Layout -->
     <div class="dashboard-container">
-        <!-- Sidebar -->
         {% include 'components/sidebar.html' %}
         
-        <!-- Main Content -->
         <main class="main-content">
-            <!-- Header -->
             {% include 'components/navbar.html' %}
             
-            <!-- Dashboard Grid -->
             <div class="dashboard-grid">
                 
-                <!-- Productivity Overview Card -->
+                <!-- Productivity Overview -->
                 <div class="glass-card overview-card">
                     <h2 class="card-title">Productivity Overview</h2>
                     <div class="productivity-gauge">
                         <div class="gauge">
                             <div class="gauge-fill"></div>
                             <div class="gauge-cover">
-                                <span class="gauge-score">{{ metrics.productivity_score }}</span>
+                                <span class="gauge-score">{{ metrics.productivity_score or 0 }}</span>
                                 <span class="gauge-label">Current Score</span>
                             </div>
                         </div>
                         <div class="metric-stats">
                             <div class="metric">
-                                <span class="metric-value">{{ metrics.focus_ratio * 100 }}%</span>
+                                <span class="metric-value">{{ (metrics.focus_ratio * 100) if metrics else 0 }}%</span>
                                 <span class="metric-label">Focus Ratio</span>
                             </div>
                             <div class="metric">
-                                <span class="metric-value">{{ metrics.task_efficiency }}%</span>
+                                <span class="metric-value">{{ metrics.task_efficiency if metrics else 0 }}%</span>
                                 <span class="metric-label">Task Efficiency</span>
                             </div>
                             <div class="metric">
-                                <span class="metric-value {% if metrics.weekly_trend > 0 %}positive{% else %}negative{% endif %}">
-                                    {{ metrics.weekly_trend }}%
+                                <span class="metric-value {% if metrics and metrics.weekly_trend > 0 %}positive{% else %}negative{% endif %}">
+                                    {{ metrics.weekly_trend if metrics else 0 }}%
                                 </span>
                                 <span class="metric-label">Weekly Trend</span>
                             </div>
@@ -55,7 +49,7 @@
                     </div>
                 </div>
                 
-                <!-- AI Insights Card -->
+                <!-- AI Insights -->
                 <div class="glass-card insights-card">
                     <h2 class="card-title">AI Insights</h2>
                     <div class="insights-content">
@@ -63,78 +57,73 @@
                             <div class="insight-icon">🧠</div>
                             <div class="insight-text">
                                 <h4>Today's Analysis</h4>
-                                <p>{{ insights.today_insight }}</p>
+                                <p>{{ insights.today_insight or "No data available" }}</p>
                             </div>
                         </div>
                         <div class="insight-item">
                             <div class="insight-icon">🔮</div>
                             <div class="insight-text">
                                 <h4>Tomorrow's Forecast</h4>
-                                <p>{{ insights.tomorrow_prediction }}</p>
+                                <p>{{ insights.tomorrow_prediction or "No data available" }}</p>
                             </div>
                         </div>
                         <div class="insight-item">
                             <div class="insight-icon">💡</div>
                             <div class="insight-text">
                                 <h4>Recommendation</h4>
-                                <p>{{ insights.recommendation }}</p>
+                                <p>{{ insights.recommendation or "No data available" }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Productivity Trend Chart -->
+                <!-- Charts -->
                 <div class="glass-card chart-card">
                     <h2 class="card-title">Productivity Trend</h2>
-                    <div class="chart-container">
-                        <canvas id="productivityChart"></canvas>
-                    </div>
+                    <div class="chart-container"><canvas id="productivityChart"></canvas></div>
                 </div>
-                
-                <!-- Focus Distribution -->
+
                 <div class="glass-card chart-card">
                     <h2 class="card-title">Focus Distribution</h2>
-                    <div class="chart-container">
-                        <canvas id="focusChart"></canvas>
-                    </div>
+                    <div class="chart-container"><canvas id="focusChart"></canvas></div>
                 </div>
                 
-                <!-- Badges & Achievements -->
+                <!-- Badges -->
                 <div class="glass-card badges-card">
                     <h2 class="card-title">Your Badges</h2>
                     <div class="badges-grid">
-                        {% for badge in badges %}
-                        <div class="badge-item {{ badge.level }}">
-                            <div class="badge-icon">🏆</div>
-                            <div class="badge-info">
-                                <h4>{{ badge.name }}</h4>
-                                <p>{{ badge.description }}</p>
-                            </div>
-                            <span class="badge-level">{{ badge.level }}</span>
-                        </div>
+                        {% if badges and badges|length > 0 %}
+                            {% for badge in badges %}
+                                <div class="badge-item {{ badge.level }}">
+                                    <div class="badge-icon">🏆</div>
+                                    <div class="badge-info">
+                                        <h4>{{ badge.name }}</h4>
+                                        <p>{{ badge.description }}</p>
+                                    </div>
+                                    <span class="badge-level">{{ badge.level }}</span>
+                                </div>
+                            {% endfor %}
                         {% else %}
-                        <div class="no-badges">
-                            <p>Complete more tasks to earn badges!</p>
-                        </div>
-                        {% endfor %}
+                            <div class="no-badges">
+                                <p>Complete more tasks to earn badges!</p>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
                 
-                <!-- Skills Radar Chart -->
+                <!-- Radar Chart -->
                 <div class="glass-card chart-card">
                     <h2 class="card-title">Performance Analysis</h2>
-                    <div class="chart-container">
-                        <canvas id="skillsRadarChart"></canvas>
-                    </div>
+                    <div class="chart-container"><canvas id="skillsRadarChart"></canvas></div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- JavaScript -->
     <script type="module" src="{{ url_for('static', filename='js/threejs-scene.js') }}"></script>
-    <script type="module" src="{{ url_for('static', filename='js/charts.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/lenis-smoothscroll.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/lenis-smoothscroll.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/animations.js') }}"></script>
+
 </body>
 </html>

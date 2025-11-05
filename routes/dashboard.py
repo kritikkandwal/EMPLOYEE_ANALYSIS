@@ -4,7 +4,10 @@ from models.user import User, ProductivityLog, Badge
 from ml_models.productivity_predictor import ProductivityPredictor
 from ml_models.badge_recommender import BadgeRecommender
 from datetime import datetime, timedelta
+from extensions import db
 import json
+from routes.dashboard import dashboard_bp
+app.register_blueprint(dashboard_bp)
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -30,31 +33,53 @@ def dashboard():
                          insights=ai_insights,
                          badges=recommended_badges)
 
+# @dashboard_bp.route('/api/dashboard-data')
+# @login_required
+# def dashboard_data():
+#     """API endpoint for dashboard data"""
+#     days = int(request.args.get('days', 7))
+    
+#     # Get productivity data
+#     logs = current_user.get_recent_productivity(days)
+    
+#     # Prepare chart data
+#     dates = [log.date.strftime('%Y-%m-%d') for log in logs]
+#     scores = [log.productivity_score for log in logs]
+#     focus_ratios = [log.focus_ratio * 100 for log in logs]
+    
+#     # Predict next week's productivity
+#     predictor = ProductivityPredictor()
+#     prediction = predictor.predict_next_week(current_user, logs)
+    
+#     return jsonify({
+#         'dates': dates,
+#         'productivity_scores': scores,
+#         'focus_ratios': focus_ratios,
+#         'prediction': prediction,
+#         'current_score': scores[-1] if scores else 75
+#     })
+
 @dashboard_bp.route('/api/dashboard-data')
 @login_required
 def dashboard_data():
-    """API endpoint for dashboard data"""
+    """Temporary mock data for testing charts"""
     days = int(request.args.get('days', 7))
-    
-    # Get productivity data
-    logs = current_user.get_recent_productivity(days)
-    
-    # Prepare chart data
-    dates = [log.date.strftime('%Y-%m-%d') for log in logs]
-    scores = [log.productivity_score for log in logs]
-    focus_ratios = [log.focus_ratio * 100 for log in logs]
-    
-    # Predict next week's productivity
-    predictor = ProductivityPredictor()
-    prediction = predictor.predict_next_week(current_user, logs)
-    
+
+    from datetime import datetime, timedelta
+    today = datetime.today()
+
+    dates = [(today - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(days)][::-1]
+    scores = [65 + i * 2 for i in range(days)]  # Example increasing productivity
+    focus_ratios = [70 + (i % 3) * 5 for i in range(days)]
+
     return jsonify({
         'dates': dates,
         'productivity_scores': scores,
         'focus_ratios': focus_ratios,
-        'prediction': prediction,
-        'current_score': scores[-1] if scores else 75
+        'prediction': 88,
+        'current_score': scores[-1]
     })
+
 
 def calculate_current_metrics(logs):
     """Calculate current productivity metrics"""

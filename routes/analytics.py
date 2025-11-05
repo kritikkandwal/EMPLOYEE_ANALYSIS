@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
 from models.user import ProductivityLog, Badge
 from datetime import datetime, timedelta
+from extensions import db
 import json
 
 analytics_bp = Blueprint('analytics', __name__)
@@ -15,6 +16,66 @@ def attendance():
 @login_required
 def leaderboard():
     return render_template('leaderboard.html')
+
+# ==========================================
+# 🧠 TASK ANALYSIS PAGE + API
+# ==========================================
+@analytics_bp.route('/task-analysis')
+@login_required
+def task_analysis():
+    """Render task analysis page"""
+    return render_template('task_analysis.html')
+
+
+@analytics_bp.route('/api/task-analysis-data')
+@login_required
+def task_analysis_data():
+    """Mock data for task analysis (replace later with DB query)"""
+    try:
+        today = datetime.utcnow().date()
+        dates = [(today - timedelta(days=i)).isoformat() for i in range(7)][::-1]
+
+        data = {
+            "dates": dates,
+            "tasks_assigned": [10, 12, 8, 11, 15, 14, 9],
+            "tasks_completed": [9, 11, 7, 10, 13, 12, 8],
+            "efficiency_rate": [90, 92, 87, 91, 86, 88, 89]
+        }
+
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ==========================================
+# ⏱ TIME TRACKING PAGE + API
+# ==========================================
+@analytics_bp.route('/time-tracking')
+@login_required
+def time_tracking():
+    """Render time tracking page"""
+    return render_template('time_tracking.html')
+
+
+@analytics_bp.route('/api/time-tracking-data')
+@login_required
+def time_tracking_data():
+    """Mock data for time tracking (replace later with DB query)"""
+    try:
+        today = datetime.utcnow().date()
+        dates = [(today - timedelta(days=i)).isoformat() for i in range(7)][::-1]
+
+        data = {
+            "dates": dates,
+            "hours_worked": [7, 6.5, 8, 7.5, 9, 8.2, 6.8],
+            "focus_hours": [4, 3.8, 5, 4.5, 5.5, 5, 4],
+            "idle_hours": [1, 1.2, 0.8, 1, 1.5, 1.3, 1]
+        }
+
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @analytics_bp.route('/api/attendance-data')
 @login_required

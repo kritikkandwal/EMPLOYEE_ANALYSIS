@@ -5,6 +5,7 @@ from ml_models.productivity_predictor import ProductivityPredictor
 from ml_models.badge_recommender import BadgeRecommender
 from ml_models.recommendation_engine import RecommendationEngine
 from datetime import datetime, timedelta
+from extensions import db
 import json
 
 api_bp = Blueprint('api', __name__)

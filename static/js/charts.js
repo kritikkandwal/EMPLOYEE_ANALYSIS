@@ -1,22 +1,24 @@
-// Chart.js implementations for productivity dashboard
-import Chart from 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/+esm';
+// ✅ Final Chart.js integration — works with UMD build
+import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/+esm';
+Chart.register(...registerables);
+
 
 class ProductivityCharts {
     constructor() {
         this.charts = {};
         this.init();
     }
-    
+
     init() {
         this.createProductivityChart();
         this.createFocusChart();
         this.createRadarChart();
     }
-    
+
     createProductivityChart() {
         const ctx = document.getElementById('productivityChart');
         if (!ctx) return;
-        
+
         this.charts.productivity = new Chart(ctx, {
             type: 'line',
             data: {
@@ -34,50 +36,34 @@ class ProductivityCharts {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
+                plugins: { legend: { display: false } },
                 scales: {
                     y: {
                         beginAtZero: true,
                         max: 100,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#ffffff'
-                        }
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#ffffff' }
                     },
                     x: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#ffffff'
-                        }
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#ffffff' }
                     }
                 }
             }
         });
     }
-    
+
     createFocusChart() {
         const ctx = document.getElementById('focusChart');
         if (!ctx) return;
-        
+
         this.charts.focus = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: ['Focus Time', 'Idle Time', 'Break Time'],
                 datasets: [{
                     data: [65, 20, 15],
-                    backgroundColor: [
-                        '#00ff88',
-                        '#ff4444',
-                        '#ffaa00'
-                    ],
+                    backgroundColor: ['#00ff88', '#ff4444', '#ffaa00'],
                     borderWidth: 0
                 }]
             },
@@ -90,74 +76,57 @@ class ProductivityCharts {
                         position: 'bottom',
                         labels: {
                             color: '#ffffff',
-                            font: {
-                                size: 12
-                            }
+                            font: { size: 12 }
                         }
                     }
                 }
             }
         });
     }
-    
+
     createRadarChart() {
         const ctx = document.getElementById('skillsRadarChart');
         if (!ctx) return;
-        
+
         this.charts.radar = new Chart(ctx, {
             type: 'radar',
             data: {
                 labels: ['Task Efficiency', 'Focus', 'Consistency', 'Collaboration', 'Punctuality'],
-                datasets: [{
-                    label: 'Current Week',
-                    data: [85, 78, 92, 65, 88],
-                    backgroundColor: 'rgba(0, 255, 255, 0.2)',
-                    borderColor: '#00ffff',
-                    borderWidth: 2,
-                    pointBackgroundColor: '#00ffff'
-                }, {
-                    label: 'Last Week',
-                    data: [78, 72, 85, 70, 82],
-                    backgroundColor: 'rgba(255, 100, 255, 0.2)',
-                    borderColor: '#ff64ff',
-                    borderWidth: 2,
-                    pointBackgroundColor: '#ff64ff'
-                }]
+                datasets: [
+                    {
+                        label: 'Current Week',
+                        data: [85, 78, 92, 65, 88],
+                        backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                        borderColor: '#00ffff',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#00ffff'
+                    },
+                    {
+                        label: 'Last Week',
+                        data: [78, 72, 85, 70, 82],
+                        backgroundColor: 'rgba(255, 100, 255, 0.2)',
+                        borderColor: '#ff64ff',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#ff64ff'
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
                     r: {
-                        angleLines: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        pointLabels: {
-                            color: '#ffffff',
-                            font: {
-                                size: 12
-                            }
-                        },
-                        ticks: {
-                            display: false,
-                            max: 100
-                        }
+                        angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        pointLabels: { color: '#ffffff', font: { size: 12 } },
+                        ticks: { display: false, max: 100 }
                     }
                 },
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: '#ffffff'
-                        }
-                    }
-                }
+                plugins: { legend: { labels: { color: '#ffffff' } } }
             }
         });
     }
-    
+
     updateProductivityChart(dates, scores) {
         if (this.charts.productivity) {
             this.charts.productivity.data.labels = dates;
@@ -167,26 +136,27 @@ class ProductivityCharts {
     }
 }
 
-// Initialize charts when DOM is loaded
+// ✅ Initialize after DOM loads
 document.addEventListener('DOMContentLoaded', () => {
-    window.productivityCharts = new ProductivityCharts();
-    
-    // Load initial data
-    loadDashboardData();
+    setTimeout(() => {
+        console.log('Initializing charts...');
+        window.productivityCharts = new ProductivityCharts();
+        loadDashboardData();
+    }, 300);
 });
 
+// ✅ Data Fetch
 async function loadDashboardData() {
     try {
         const response = await fetch('/api/dashboard-data?days=7');
         const data = await response.json();
-        
+        console.log('Dashboard Data Fetched:', data);
+
         if (window.productivityCharts) {
             window.productivityCharts.updateProductivityChart(data.dates, data.productivity_scores);
         }
-        
-        // Update productivity gauge
+
         updateProductivityGauge(data.current_score);
-        
     } catch (error) {
         console.error('Error loading dashboard data:', error);
     }
@@ -195,19 +165,13 @@ async function loadDashboardData() {
 function updateProductivityGauge(score) {
     const gauge = document.querySelector('.gauge-fill');
     const scoreText = document.querySelector('.gauge-score');
-    
-    if (gauge && scoreText) {
-        const degrees = (score / 100) * 180;
-        gauge.style.transform = `rotate(${degrees}deg)`;
-        scoreText.textContent = Math.round(score);
-        
-        // Update color based on score
-        if (score >= 80) {
-            gauge.style.background = '#00ff88';
-        } else if (score >= 60) {
-            gauge.style.background = '#ffaa00';
-        } else {
-            gauge.style.background = '#ff4444';
-        }
-    }
+    if (!gauge || !scoreText) return;
+
+    const degrees = (score / 100) * 180;
+    gauge.style.transform = `rotate(${degrees}deg)`;
+    scoreText.textContent = Math.round(score);
+
+    if (score >= 80) gauge.style.background = '#00ff88';
+    else if (score >= 60) gauge.style.background = '#ffaa00';
+    else gauge.style.background = '#ff4444';
 }

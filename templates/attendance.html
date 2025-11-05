@@ -1,135 +1,80 @@
 {% extends "base.html" %}
-
 {% block title %}Attendance Calendar - AI Productivity Intelligence{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1 class="page-title">
-        <i class="fas fa-calendar-alt"></i>
-        Attendance Calendar
-    </h1>
-    <p class="page-subtitle">Track your productivity streaks and attendance patterns</p>
-</div>
+    <h1 class="page-title"><i class="fas fa-calendar-alt"></i> Productivity Attendance (2025)</h1>
+    <p class="page-subtitle">Track your daily productivity pattern in a sleek LeetCode-style horizontal calendar.</p>
+</div><br>
 
 <div class="attendance-grid">
     <!-- Calendar Card -->
     <div class="glass-card calendar-card">
         <div class="calendar-header">
             <h2>Productivity Calendar</h2>
-            <div class="calendar-controls">
-                <button class="btn btn-icon" id="prev-month">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <span id="current-month">November 2024</span>
-                <button class="btn btn-icon" id="next-month">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
+            <p>Each box represents one day — brighter colors mean higher productivity.</p>
+        </div>
+
+        <div class="calendar-container">
+            <div class="calendar-row" id="calendarRow">
+                <!-- JS will populate months horizontally -->
             </div>
         </div>
+
         <div class="calendar-legend">
-            <div class="legend-item">
-                <div class="color-box high-productivity"></div>
-                <span>High Productivity (≥80%)</span>
-            </div>
-            <div class="legend-item">
-                <div class="color-box medium-productivity"></div>
-                <span>Medium Productivity (40-79%)</span>
-            </div>
-            <div class="legend-item">
-                <div class="color-box low-productivity"></div>
-                <span>Low Productivity (<40%)</span>
-            </div>
-            <div class="legend-item">
-                <div class="color-box absent"></div>
-                <span>Absent</span>
-            </div>
-        </div>
-        <div id="calendar" class="calendar">
-            <!-- Calendar will be populated by JavaScript -->
+            <div class="legend-item"><div class="color-box high-productivity"></div><span>High (≥80%)</span></div>
+            <div class="legend-item"><div class="color-box medium-productivity"></div><span>Medium (40–79%)</span></div>
+            <div class="legend-item"><div class="color-box low-productivity"></div><span>Low (&lt;40%)</span></div>
+            <div class="legend-item"><div class="color-box absent"></div><span>Absent</span></div>
         </div>
     </div>
-
-    <!-- Stats Card -->
+<br>
+    <!-- Stats -->
     <div class="glass-card stats-card">
         <h2>Attendance Statistics</h2>
         <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-value" id="current-streak">5</div>
-                <div class="stat-label">Current Streak</div>
-                <div class="stat-trend positive">
-                    <i class="fas fa-arrow-up"></i>
-                    +2 days
-                </div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="attendance-rate">92%</div>
-                <div class="stat-label">Attendance Rate</div>
-                <div class="stat-trend positive">
-                    <i class="fas fa-arrow-up"></i>
-                    +5%
-                </div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="avg-productivity">78%</div>
-                <div class="stat-label">Avg Productivity</div>
-                <div class="stat-trend positive">
-                    <i class="fas fa-arrow-up"></i>
-                    +3%
-                </div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="total-days">22</div>
-                <div class="stat-label">Days Tracked</div>
-                <div class="stat-trend">
-                    This month
-                </div>
-            </div>
+            <div class="stat-item"><div class="stat-value">11</div><div class="stat-label">Current Streak</div></div>
+            <div class="stat-item"><div class="stat-value">93%</div><div class="stat-label">Attendance Rate</div></div>
+            <div class="stat-item"><div class="stat-value">80%</div><div class="stat-label">Avg Productivity</div></div>
+            <div class="stat-item"><div class="stat-value">365</div><div class="stat-label">Days Tracked</div></div>
         </div>
     </div>
-
-    <!-- AI Predictions Card -->
+<br>
+    <!-- AI Predictions -->
     <div class="glass-card predictions-card">
         <h2>AI Predictions</h2>
         <div class="prediction-content">
             <div class="prediction-item">
-                <div class="prediction-icon">
-                    <i class="fas fa-brain"></i>
-                </div>
+                <div class="prediction-icon"><i class="fas fa-brain"></i></div>
                 <div class="prediction-text">
                     <h4>Next Week Forecast</h4>
-                    <p>Expected productivity: <strong>82%</strong></p>
-                    <small>Based on your current trends and work patterns</small>
+                    <p>Expected productivity: <strong>85%</strong></p>
+                    <small>Based on recent consistency</small>
                 </div>
             </div>
             <div class="prediction-item">
-                <div class="prediction-icon">
-                    <i class="fas fa-lightbulb"></i>
-                </div>
+                <div class="prediction-icon"><i class="fas fa-lightbulb"></i></div>
                 <div class="prediction-text">
-                    <h4>Optimal Work Days</h4>
-                    <p>Tuesday - Thursday show peak performance</p>
-                    <small>Schedule important tasks during these days</small>
+                    <h4>Optimal Days</h4>
+                    <p>Tuesday – Thursday show peak focus</p>
+                    <small>Plan important work during these days</small>
                 </div>
             </div>
             <div class="prediction-item">
-                <div class="prediction-icon">
-                    <i class="fas fa-bed"></i>
-                </div>
+                <div class="prediction-icon"><i class="fas fa-bed"></i></div>
                 <div class="prediction-text">
-                    <h4>Rest Recommendation</h4>
-                    <p>Consider taking Friday afternoon off</p>
-                    <small>Your data shows productivity dip patterns</small>
+                    <h4>Rest Suggestion</h4>
+                    <p>Take Friday evenings off for recovery</p>
+                    <small>Detected lower productivity trend</small>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Streak History Card -->
+<br>
+    <!-- Streak Chart -->
     <div class="glass-card streak-card">
         <h2>Streak History</h2>
-        <div class="streak-chart">
-            <canvas id="streakChart"></canvas>
-        </div>
+        <div class="streak-chart"><canvas id="streakChart"></canvas></div>
     </div>
 </div>
 {% endblock %}
@@ -137,175 +82,107 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize calendar
-    initializeCalendar();
-    
-    // Initialize streak chart
+    generateLeetCodeStyleCalendar();
     initializeStreakChart();
 });
 
-function initializeCalendar() {
-    const calendar = document.getElementById('calendar');
-    const currentMonthEl = document.getElementById('current-month');
-    
-    let currentDate = new Date();
-    
-    function renderCalendar(date) {
-        const year = date.getFullYear();
-        const month = date.getMonth();
-        
-        // Update month display
-        currentMonthEl.textContent = date.toLocaleDateString('en-US', { 
-            month: 'long', 
-            year: 'numeric' 
-        });
-        
-        // Generate calendar HTML
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const daysInMonth = lastDay.getDate();
-        
-        let calendarHTML = '<div class="calendar-weekdays">';
-        const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+function generateLeetCodeStyleCalendar() {
+    const calendarRow = document.getElementById('calendarRow');
+    const months = [
+        { name: "Nov", year: 2024, month: 10 },
+        { name: "Dec", year: 2024, month: 11 },
+        { name: "Jan", year: 2025, month: 0 },
+        { name: "Feb", year: 2025, month: 1 },
+        { name: "Mar", year: 2025, month: 2 },
+        { name: "Apr", year: 2025, month: 3 },
+        { name: "May", year: 2025, month: 4 },
+        { name: "Jun", year: 2025, month: 5 },
+        { name: "Jul", year: 2025, month: 6 },
+        { name: "Aug", year: 2025, month: 7 },
+        { name: "Sep", year: 2025, month: 8 },
+        { name: "Oct", year: 2025, month: 9 }
+    ];
+    const weekdays = ["S","M","T","W","T","F","S"];
+
+    months.forEach(monthObj => {
+        const monthContainer = document.createElement('div');
+        monthContainer.className = 'month-container';
+
+        const monthTitle = document.createElement('div');
+        monthTitle.className = 'month-title';
+        monthTitle.textContent = monthObj.name;
+        monthContainer.appendChild(monthTitle);
+
+        const weekdaysRow = document.createElement('div');
+        weekdaysRow.className = 'weekdays';
         weekdays.forEach(day => {
-            calendarHTML += `<div class="weekday">${day}</div>`;
+            const d = document.createElement('div');
+            d.className = 'weekday';
+            d.textContent = day;
+            weekdaysRow.appendChild(d);
         });
-        calendarHTML += '</div><div class="calendar-days">';
-        
-        // Add empty cells for days before the first day of the month
-        for (let i = 0; i < firstDay.getDay(); i++) {
-            calendarHTML += '<div class="calendar-day empty"></div>';
+        monthContainer.appendChild(weekdaysRow);
+
+        const daysGrid = document.createElement('div');
+        daysGrid.className = 'days-grid';
+
+        const firstDay = new Date(monthObj.year, monthObj.month, 1);
+        const totalDays = new Date(monthObj.year, monthObj.month + 1, 0).getDate();
+        const startOffset = firstDay.getDay();
+
+        for (let i = 0; i < startOffset; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'day-cell empty';
+            daysGrid.appendChild(empty);
         }
-        
-        // Add days of the month
-        for (let day = 1; day <= daysInMonth; day++) {
+
+        for (let day = 1; day <= totalDays; day++) {
+            const dayCell = document.createElement('div');
+            dayCell.className = 'day-cell';
             const productivity = Math.random() * 100;
-            let productivityClass = 'absent';
-            
-            if (productivity >= 80) {
-                productivityClass = 'high-productivity';
-            } else if (productivity >= 40) {
-                productivityClass = 'medium-productivity';
-            } else if (productivity > 0) {
-                productivityClass = 'low-productivity';
+
+            if (productivity >= 80) dayCell.classList.add('high-productivity');
+            else if (productivity >= 40) dayCell.classList.add('medium-productivity');
+            else if (productivity > 0) dayCell.classList.add('low-productivity');
+            else dayCell.classList.add('absent');
+
+            if (monthObj.year === 2025 && monthObj.month === 4 && day === 26) {
+                dayCell.classList.add('high-productivity');
+                dayCell.title = '3 submissions on May 26, 2025';
+            } else {
+                dayCell.title = `${monthObj.name} ${day}, ${monthObj.year}`;
             }
-            
-            calendarHTML += `
-                <div class="calendar-day ${productivityClass}" data-productivity="${Math.round(productivity)}">
-                    <span class="day-number">${day}</span>
-                    <div class="productivity-bar"></div>
-                </div>
-            `;
+
+            daysGrid.appendChild(dayCell);
         }
-        
-        calendarHTML += '</div>';
-        calendar.innerHTML = calendarHTML;
-        
-        // Add click handlers
-        document.querySelectorAll('.calendar-day:not(.empty)').forEach(day => {
-            day.addEventListener('click', function() {
-                const productivity = this.getAttribute('data-productivity');
-                showDayDetails(this, productivity);
-            });
-        });
-    }
-    
-    function showDayDetails(dayElement, productivity) {
-        // Remove existing tooltips
-        document.querySelectorAll('.day-tooltip').forEach(tooltip => tooltip.remove());
-        
-        const tooltip = document.createElement('div');
-        tooltip.className = 'day-tooltip';
-        tooltip.innerHTML = `
-            <strong>Productivity: ${productivity}%</strong>
-            <br>Click for detailed analysis
-        `;
-        
-        dayElement.appendChild(tooltip);
-        
-        // Remove tooltip after 3 seconds
-        setTimeout(() => {
-            tooltip.remove();
-        }, 3000);
-    }
-    
-    // Navigation
-    document.getElementById('prev-month').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        renderCalendar(currentDate);
+
+        monthContainer.appendChild(daysGrid);
+        calendarRow.appendChild(monthContainer);
     });
-    
-    document.getElementById('next-month').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        renderCalendar(currentDate);
-    });
-    
-    // Initial render
-    renderCalendar(currentDate);
 }
 
 function initializeStreakChart() {
-    const ctx = document.getElementById('streakChart').getContext('2d');
-    
-    // Sample data
-    const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-    const productivity = [75, 82, 78, 85];
-    const attendance = [100, 100, 80, 100];
-    
+    const ctx = document.getElementById("streakChart").getContext("2d");
+    const weeks = ["Week 1", "Week 2", "Week 3", "Week 4"];
+    const productivity = [70, 82, 78, 85];
+    const attendance = [100, 90, 95, 100];
+
     new Chart(ctx, {
-        type: 'line',
+        type: "line",
         data: {
             labels: weeks,
             datasets: [
-                {
-                    label: 'Productivity %',
-                    data: productivity,
-                    borderColor: '#00ffff',
-                    backgroundColor: 'rgba(0, 255, 255, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                },
-                {
-                    label: 'Attendance %',
-                    data: attendance,
-                    borderColor: '#00ff88',
-                    backgroundColor: 'rgba(0, 255, 136, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }
+                { label: "Productivity %", data: productivity, borderColor: "#00ffff", backgroundColor: "rgba(0,255,255,0.15)", fill: true, tension: 0.4 },
+                { label: "Attendance %", data: attendance, borderColor: "#00ff88", backgroundColor: "rgba(0,255,136,0.1)", fill: true, tension: 0.4 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#ffffff'
-                    }
-                }
-            },
+            plugins: { legend: { labels: { color: "#fff" } } },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    },
-                    ticks: {
-                        color: '#ffffff'
-                    }
-                },
-                x: {
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    },
-                    ticks: {
-                        color: '#ffffff'
-                    }
-                }
+                y: { beginAtZero: true, max: 100, ticks: { color: "#fff" }, grid: { color: "rgba(255,255,255,0.1)" } },
+                x: { ticks: { color: "#fff" }, grid: { color: "rgba(255,255,255,0.1)" } }
             }
         }
     });
@@ -313,237 +190,87 @@ function initializeStreakChart() {
 </script>
 
 <style>
-.attendance-grid {
+.calendar-container {
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 20px;
+    overflow-x: auto;
+}
+.calendar-row {
+    display: flex;
+    gap: 25px;
+    min-width: max-content;
+    padding-bottom: 10px;
+}
+.month-container {
+    min-width: 220px;
+}
+.month-title {
+    text-align: center;
+    color: var(--primary-glow);
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+.weekdays {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 24px;
-    margin-top: 20px;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 5px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-secondary);
 }
-
-.calendar-card {
-    grid-column: 1 / -1;
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
 }
-
-.calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.calendar-controls {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.calendar-legend {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-}
-
-.legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.875rem;
-}
-
-.color-box {
+.day-cell {
     width: 16px;
     height: 16px;
-    border-radius: 4px;
+    border-radius: 3px;
+    transition: transform 0.2s ease;
+    cursor: pointer;
 }
-
+.day-cell:hover { transform: scale(1.2); }
+.empty { background: transparent; }
 .high-productivity { background: #00ff88; }
 .medium-productivity { background: #ffaa00; }
 .low-productivity { background: #ff4444; }
-.absent { background: #666666; }
+.absent { background: #333; }
 
-.calendar {
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 12px;
-    padding: 20px;
-}
-
-.calendar-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
-    margin-bottom: 10px;
-}
-
-.weekday {
-    text-align: center;
-    font-weight: 600;
-    color: var(--text-secondary);
-    padding: 10px;
-}
-
-.calendar-days {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
-}
-
-.calendar-day {
-    aspect-ratio: 1;
-    border-radius: 8px;
+.calendar-legend {
     display: flex;
-    flex-direction: column;
-    align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    border: 1px solid transparent;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
 }
-
-.calendar-day:hover {
-    transform: scale(1.05);
-    border-color: var(--primary-glow);
-}
-
-.calendar-day.empty {
-    background: transparent;
-    cursor: default;
-}
-
-.calendar-day.empty:hover {
-    transform: none;
-    border-color: transparent;
-}
-
-.day-number {
-    font-size: 0.875rem;
-    font-weight: 600;
-}
-
-.day-tooltip {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--bg-dark);
-    border: 1px solid var(--primary-glow);
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    white-space: nowrap;
-    z-index: 10;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.85rem; }
+.color-box { width: 14px; height: 14px; border-radius: 3px; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .stat-item {
     text-align: center;
     padding: 20px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255,255,255,0.03);
     border-radius: 12px;
 }
-
 .stat-value {
     font-size: 2rem;
     font-weight: bold;
-    margin-bottom: 5px;
     background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
 }
-
-.stat-label {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    margin-bottom: 5px;
-}
-
-.stat-trend {
-    font-size: 0.75rem;
-}
-
-.stat-trend.positive {
-    color: var(--accent-glow);
-}
-
-.prediction-content {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.prediction-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 15px;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 12px;
-}
-
-.prediction-icon {
-    font-size: 1.5rem;
-    color: var(--primary-glow);
-}
-
-.prediction-text h4 {
-    margin-bottom: 5px;
-    color: var(--text-primary);
-}
-
-.prediction-text p {
-    margin-bottom: 5px;
-    color: var(--text-secondary);
-}
-
-.prediction-text small {
-    color: var(--text-secondary);
-    opacity: 0.7;
-}
-
-.streak-chart {
-    height: 200px;
-    position: relative;
-}
-
-.btn-icon {
-    background: transparent;
-    border: 1px solid var(--glass-border);
-    color: var(--text-primary);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-icon:hover {
-    border-color: var(--primary-glow);
-    color: var(--primary-glow);
-}
+.prediction-content { display: flex; flex-direction: column; gap: 15px; }
+.prediction-item { display: flex; align-items: flex-start; gap: 15px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; }
+.prediction-icon { font-size: 1.5rem; color: var(--primary-glow); }
+.prediction-text h4 { margin-bottom: 5px; color: var(--text-primary); }
+.prediction-text p, .prediction-text small { color: var(--text-secondary); }
+.streak-chart { height: 220px; position: relative; }
 
 @media (max-width: 768px) {
-    .attendance-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .calendar-legend {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
+    .attendance-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr; }
 }
 </style>
 {% endblock %}

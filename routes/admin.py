@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from models.user import User, ProductivityLog, Badge, db
 from datetime import datetime, timedelta
 import pandas as pd
+from extensions import db
 import json
 
 admin_bp = Blueprint('admin', __name__)

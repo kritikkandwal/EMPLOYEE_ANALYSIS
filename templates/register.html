@@ -13,18 +13,13 @@
             <p class="auth-subtitle">Join our productivity revolution</p>
         </div>
 
-        <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form">
-            {{ form.hidden_tag() }}
-            
+        <form method="POST" action="{{ url_for('register') }}" class="auth-form">
             <div class="form-group">
                 <label for="username" class="form-label">
                     <i class="fas fa-user"></i>
                     Username
                 </label>
-                {{ form.username(class="form-input", placeholder="Choose a username") }}
-                {% for error in form.username.errors %}
-                    <span class="form-error">{{ error }}</span>
-                {% endfor %}
+                <input type="text" name="username" class="form-input" placeholder="Choose a username" required>
             </div>
 
             <div class="form-group">
@@ -32,10 +27,7 @@
                     <i class="fas fa-envelope"></i>
                     Email Address
                 </label>
-                {{ form.email(class="form-input", placeholder="Enter your email") }}
-                {% for error in form.email.errors %}
-                    <span class="form-error">{{ error }}</span>
-                {% endfor %}
+                <input type="email" name="email" class="form-input" placeholder="Enter your email" required>
             </div>
 
             <div class="form-group">
@@ -43,21 +35,7 @@
                     <i class="fas fa-lock"></i>
                     Password
                 </label>
-                {{ form.password(class="form-input", placeholder="Create a password") }}
-                {% for error in form.password.errors %}
-                    <span class="form-error">{{ error }}</span>
-                {% endfor %}
-            </div>
-
-            <div class="form-group">
-                <label for="password2" class="form-label">
-                    <i class="fas fa-lock"></i>
-                    Confirm Password
-                </label>
-                {{ form.password2(class="form-input", placeholder="Confirm your password") }}
-                {% for error in form.password2.errors %}
-                    <span class="form-error">{{ error }}</span>
-                {% endfor %}
+                <input type="password" name="password" class="form-input" placeholder="Create a password" required>
             </div>
 
             <div class="form-group">
@@ -65,10 +43,7 @@
                     <i class="fas fa-building"></i>
                     Department
                 </label>
-                {{ form.department(class="form-input", placeholder="Your department") }}
-                {% for error in form.department.errors %}
-                    <span class="form-error">{{ error }}</span>
-                {% endfor %}
+                <input type="text" name="department" class="form-input" placeholder="Your department">
             </div>
 
             <div class="form-group">
@@ -76,17 +51,16 @@
                     <i class="fas fa-briefcase"></i>
                     Position
                 </label>
-                {{ form.position(class="form-input", placeholder="Your position") }}
-                {% for error in form.position.errors %}
-                    <span class="form-error">{{ error }}</span>
-                {% endfor %}
+                <input type="text" name="position" class="form-input" placeholder="Your position">
             </div>
 
-            {{ form.submit(class="btn btn-primary auth-btn") }}
+            <button type="submit" class="btn btn-primary auth-btn">Register</button>
         </form>
 
         <div class="auth-footer">
-            <p>Already have an account? <a href="{{ url_for('auth.login') }}" class="auth-link">Sign in here</a></p>
+            <p>Already have an account? 
+                <a href="{{ url_for('login') }}" class="auth-link">Sign in here</a>
+            </p>
         </div>
 
         <div class="benefits">

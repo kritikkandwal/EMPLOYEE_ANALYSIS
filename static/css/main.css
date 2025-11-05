@@ -315,3 +315,31 @@ body {
 .glow-effect {
     animation: glow 2s ease-in-out infinite;
 }
+
+/* ---- Layout Fix for Sidebar + Navbar Overlap ---- */
+.main-content {
+    margin-left: 280px; /* Sidebar width */
+    margin-top: 70px;   /* Navbar height */
+    padding: 2rem;
+    min-height: calc(100vh - 70px);
+    transition: all 0.3s ease;
+}
+
+.content-wrapper {
+    padding: 1rem;
+}
+
+/* When user is not logged in (full-width pages like login/register) */
+.main-content.full-width {
+    margin-left: 0;
+    margin-top: 0;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        margin-top: 60px;
+        padding: 1rem;
+    }
+}
