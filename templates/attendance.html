@@ -1,276 +1,458 @@
 {% extends "base.html" %}
-{% block title %}Attendance Calendar - AI Productivity Intelligence{% endblock %}
+
+{% block title %}Attendance Tracker - AI Productivity Intelligence{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1 class="page-title"><i class="fas fa-calendar-alt"></i> Productivity Attendance (2025)</h1>
-    <p class="page-subtitle">Track your daily productivity pattern in a sleek LeetCode-style horizontal calendar.</p>
-</div><br>
+    <h1 class="page-title">
+        <i class="fas fa-calendar-check"></i>
+        Attendance Tracker
+    </h1>
+    <p class="page-subtitle">Track your daily attendance, hours worked, and productivity patterns</p>
+</div>
+<br>
+<div class="attendance-container">
+    <!-- Quick Actions Card -->
+    <div class="glass-card quick-actions-card">
+        <div class="actions-header">
+            <h3>Today's Attendance</h3>
+            <div class="current-time" id="currentTime"></div>
+        </div>
 
-<div class="attendance-grid">
-    <!-- Calendar Card -->
+        <div class="attendance-actions">
+            <button class="btn btn-success attendance-btn" id="loginBtn" data-action="login">
+                <i class="fas fa-sign-in-alt"></i>
+                Log In
+            </button>
+            <button class="btn btn-warning attendance-btn" id="logoutBtn" data-action="logout">
+                <i class="fas fa-sign-out-alt"></i>
+                Log Out
+            </button>
+        </div>
+
+        <div class="today-status" id="todayStatus">
+            <div class="status-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                Loading today's status...
+            </div>
+        </div>
+    </div>
+
+
+    <br>
+    <!-- Monthly Calendar Card -->
     <div class="glass-card calendar-card">
         <div class="calendar-header">
-            <h2>Productivity Calendar</h2>
-            <p>Each box represents one day — brighter colors mean higher productivity.</p>
-        </div>
+            <h3>Attendance Calendar</h3>
+        </div><br>
 
-        <div class="calendar-container">
-            <div class="calendar-row" id="calendarRow">
-                <!-- JS will populate months horizontally -->
+
+        <div class="calendar" id="attendanceCalendar">
+            <div class="calendar-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                Loading calendar...
             </div>
-        </div>
-
-        <div class="calendar-legend">
-            <div class="legend-item"><div class="color-box high-productivity"></div><span>High (≥80%)</span></div>
-            <div class="legend-item"><div class="color-box medium-productivity"></div><span>Medium (40–79%)</span></div>
-            <div class="legend-item"><div class="color-box low-productivity"></div><span>Low (&lt;40%)</span></div>
-            <div class="legend-item"><div class="color-box absent"></div><span>Absent</span></div>
         </div>
     </div>
 <br>
-    <!-- Stats -->
+    <!-- Statistics Card -->
     <div class="glass-card stats-card">
-        <h2>Attendance Statistics</h2>
-        <div class="stats-grid">
-            <div class="stat-item"><div class="stat-value">11</div><div class="stat-label">Current Streak</div></div>
-            <div class="stat-item"><div class="stat-value">93%</div><div class="stat-label">Attendance Rate</div></div>
-            <div class="stat-item"><div class="stat-value">80%</div><div class="stat-label">Avg Productivity</div></div>
-            <div class="stat-item"><div class="stat-value">365</div><div class="stat-label">Days Tracked</div></div>
+        <h3>Monthly Statistics</h3>
+        <div class="stats-grid" id="monthlyStats">
+            <div class="stat-item">
+                <div class="stat-value" id="presentDays">0</div>
+                <div class="stat-label">Present Days</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="attendanceRate">0%</div>
+                <div class="stat-label">Attendance Rate</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="currentStreak">0</div>
+                <div class="stat-label">Current Streak</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalHours">0</div>
+                <div class="stat-label">Total Hours</div>
+            </div>
         </div>
     </div>
 <br>
-    <!-- AI Predictions -->
+    <!-- Add this section after the Statistics Card -->
+    <div class="glass-card ml-predictions-card">
+        <h3>🤖 AI Attendance Predictions</h3>
+
+        <div class="ml-models-tabs">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="tomorrow">Tomorrow</button>
+                <button class="tab-btn" data-tab="weekly">Next Week</button>
+                <button class="tab-btn" data-tab="streak">Streak Forecast</button>
+                <button class="tab-btn" data-tab="absence">Absence Risk</button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Tomorrow Prediction -->
+                <div class="tab-pane active" id="tomorrow-tab">
+                    <div class="prediction-main">
+                        <div class="prediction-score" id="tomorrowProbability">0%</div>
+                        <div class="prediction-label">Attendance Probability</div>
+                        <div class="confidence-badge" id="tomorrowConfidence">
+                            <i class="fas fa-shield-alt"></i>
+                            <span id="confidenceLevel">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="prediction-details">
+                        <div class="detail-item">
+                            <span>Expected Hours:</span>
+                            <span id="expectedHours">0</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Model Used:</span>
+                            <span id="modelUsed">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Trend -->
+                <div class="tab-pane" id="weekly-tab">
+                    <div class="weekly-predictions">
+                        <div class="week-header">
+                            <h4>Next 7 Days Forecast</h4>
+                            <div class="avg-attendance">
+                                Avg: <span id="weeklyAvg">0%</span>
+                            </div>
+                        </div>
+                        <div class="days-grid" id="weeklyDaysGrid">
+                            <!-- JS will populate -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Streak Forecast -->
+                <div class="tab-pane" id="streak-tab">
+                    <div class="streak-prediction">
+                        <div class="streak-current">
+                            <span>Current Streak:</span>
+                            <strong id="currentStreak">0</strong> days
+                        </div>
+                        <div class="streak-continuation">
+                            <span>Continue Probability:</span>
+                            <strong id="streakProbability">0%</span>
+                        </div>
+                        <div class="streak-forecast">
+                            <span>Expected to continue for:</span>
+                            <strong id="expectedContinuation">0</strong> more days
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Absence Risk -->
+                <div class="tab-pane" id="absence-tab">
+                    <div class="risk-assessment">
+                        <div class="risk-level" id="absenceRisk">
+                            <span class="risk-badge low">Low Risk</span>
+                        </div>
+                        <div class="risk-probability">
+                            Absence Probability: <strong id="absenceProbability">0%</strong>
+                        </div>
+                        <div class="risk-factors">
+                            <h5>Key Factors:</h5>
+                            <ul id="riskFactorsList">
+                                <!-- JS will populate -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ml-actions">
+            <button class="btn btn-outline" onclick="refreshPredictions()">
+                <i class="fas fa-sync-alt"></i>
+                Refresh Predictions
+            </button>
+            <button class="btn btn-outline" onclick="trainModels()">
+                <i class="fas fa-brain"></i>
+                Retrain Models
+            </button>
+        </div>
+    </div>
+<br>
+    <!-- AI Predictions Card -->
     <div class="glass-card predictions-card">
-        <h2>AI Predictions</h2>
-        <div class="prediction-content">
-            <div class="prediction-item">
-                <div class="prediction-icon"><i class="fas fa-brain"></i></div>
-                <div class="prediction-text">
-                    <h4>Next Week Forecast</h4>
-                    <p>Expected productivity: <strong>85%</strong></p>
-                    <small>Based on recent consistency</small>
-                </div>
-            </div>
-            <div class="prediction-item">
-                <div class="prediction-icon"><i class="fas fa-lightbulb"></i></div>
-                <div class="prediction-text">
-                    <h4>Optimal Days</h4>
-                    <p>Tuesday – Thursday show peak focus</p>
-                    <small>Plan important work during these days</small>
-                </div>
-            </div>
-            <div class="prediction-item">
-                <div class="prediction-icon"><i class="fas fa-bed"></i></div>
-                <div class="prediction-text">
-                    <h4>Rest Suggestion</h4>
-                    <p>Take Friday evenings off for recovery</p>
-                    <small>Detected lower productivity trend</small>
-                </div>
+        <h3>AI Predictions & Insights</h3>
+        <div class="predictions-content" id="predictionsContent">
+            <div class="prediction-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                Generating insights...
             </div>
         </div>
-    </div>
-<br>
-    <!-- Streak Chart -->
-    <div class="glass-card streak-card">
-        <h2>Streak History</h2>
-        <div class="streak-chart"><canvas id="streakChart"></canvas></div>
     </div>
 </div>
 {% endblock %}
 
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    generateLeetCodeStyleCalendar();
-    initializeStreakChart();
-});
-
-function generateLeetCodeStyleCalendar() {
-    const calendarRow = document.getElementById('calendarRow');
-    const months = [
-        { name: "Nov", year: 2024, month: 10 },
-        { name: "Dec", year: 2024, month: 11 },
-        { name: "Jan", year: 2025, month: 0 },
-        { name: "Feb", year: 2025, month: 1 },
-        { name: "Mar", year: 2025, month: 2 },
-        { name: "Apr", year: 2025, month: 3 },
-        { name: "May", year: 2025, month: 4 },
-        { name: "Jun", year: 2025, month: 5 },
-        { name: "Jul", year: 2025, month: 6 },
-        { name: "Aug", year: 2025, month: 7 },
-        { name: "Sep", year: 2025, month: 8 },
-        { name: "Oct", year: 2025, month: 9 }
-    ];
-    const weekdays = ["S","M","T","W","T","F","S"];
-
-    months.forEach(monthObj => {
-        const monthContainer = document.createElement('div');
-        monthContainer.className = 'month-container';
-
-        const monthTitle = document.createElement('div');
-        monthTitle.className = 'month-title';
-        monthTitle.textContent = monthObj.name;
-        monthContainer.appendChild(monthTitle);
-
-        const weekdaysRow = document.createElement('div');
-        weekdaysRow.className = 'weekdays';
-        weekdays.forEach(day => {
-            const d = document.createElement('div');
-            d.className = 'weekday';
-            d.textContent = day;
-            weekdaysRow.appendChild(d);
-        });
-        monthContainer.appendChild(weekdaysRow);
-
-        const daysGrid = document.createElement('div');
-        daysGrid.className = 'days-grid';
-
-        const firstDay = new Date(monthObj.year, monthObj.month, 1);
-        const totalDays = new Date(monthObj.year, monthObj.month + 1, 0).getDate();
-        const startOffset = firstDay.getDay();
-
-        for (let i = 0; i < startOffset; i++) {
-            const empty = document.createElement('div');
-            empty.className = 'day-cell empty';
-            daysGrid.appendChild(empty);
-        }
-
-        for (let day = 1; day <= totalDays; day++) {
-            const dayCell = document.createElement('div');
-            dayCell.className = 'day-cell';
-            const productivity = Math.random() * 100;
-
-            if (productivity >= 80) dayCell.classList.add('high-productivity');
-            else if (productivity >= 40) dayCell.classList.add('medium-productivity');
-            else if (productivity > 0) dayCell.classList.add('low-productivity');
-            else dayCell.classList.add('absent');
-
-            if (monthObj.year === 2025 && monthObj.month === 4 && day === 26) {
-                dayCell.classList.add('high-productivity');
-                dayCell.title = '3 submissions on May 26, 2025';
-            } else {
-                dayCell.title = `${monthObj.name} ${day}, ${monthObj.year}`;
-            }
-
-            daysGrid.appendChild(dayCell);
-        }
-
-        monthContainer.appendChild(daysGrid);
-        calendarRow.appendChild(monthContainer);
-    });
-}
-
-function initializeStreakChart() {
-    const ctx = document.getElementById("streakChart").getContext("2d");
-    const weeks = ["Week 1", "Week 2", "Week 3", "Week 4"];
-    const productivity = [70, 82, 78, 85];
-    const attendance = [100, 90, 95, 100];
-
-    new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: weeks,
-            datasets: [
-                { label: "Productivity %", data: productivity, borderColor: "#00ffff", backgroundColor: "rgba(0,255,255,0.15)", fill: true, tension: 0.4 },
-                { label: "Attendance %", data: attendance, borderColor: "#00ff88", backgroundColor: "rgba(0,255,136,0.1)", fill: true, tension: 0.4 }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: "#fff" } } },
-            scales: {
-                y: { beginAtZero: true, max: 100, ticks: { color: "#fff" }, grid: { color: "rgba(255,255,255,0.1)" } },
-                x: { ticks: { color: "#fff" }, grid: { color: "rgba(255,255,255,0.1)" } }
-            }
-        }
-    });
-}
-</script>
-
+{% block extra_css %}
 <style>
-.calendar-container {
-    background: rgba(255,255,255,0.03);
-    border-radius: 12px;
-    padding: 20px;
-    overflow-x: auto;
-}
-.calendar-row {
-    display: flex;
-    gap: 25px;
-    min-width: max-content;
-    padding-bottom: 10px;
-}
-.month-container {
-    min-width: 220px;
-}
-.month-title {
-    text-align: center;
-    color: var(--primary-glow);
-    font-weight: 600;
-    margin-bottom: 10px;
-}
-.weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    margin-bottom: 5px;
-    text-align: center;
-    font-size: 11px;
-    color: var(--text-secondary);
-}
-.days-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-}
-.day-cell {
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
-    transition: transform 0.2s ease;
-    cursor: pointer;
-}
-.day-cell:hover { transform: scale(1.2); }
-.empty { background: transparent; }
-.high-productivity { background: #00ff88; }
-.medium-productivity { background: #ffaa00; }
-.low-productivity { background: #ff4444; }
-.absent { background: #333; }
+    /* --- PURE GITHUB STRUCTURE FIX (not colors) --- */
 
-.calendar-legend {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 20px;
-    flex-wrap: wrap;
-}
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.85rem; }
-.color-box { width: 14px; height: 14px; border-radius: 3px; }
-.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.stat-item {
-    text-align: center;
-    padding: 20px;
-    background: rgba(255,255,255,0.03);
-    border-radius: 12px;
-}
-.stat-value {
-    font-size: 2rem;
-    font-weight: bold;
-    background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.prediction-content { display: flex; flex-direction: column; gap: 15px; }
-.prediction-item { display: flex; align-items: flex-start; gap: 15px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; }
-.prediction-icon { font-size: 1.5rem; color: var(--primary-glow); }
-.prediction-text h4 { margin-bottom: 5px; color: var(--text-primary); }
-.prediction-text p, .prediction-text small { color: var(--text-secondary); }
-.streak-chart { height: 220px; position: relative; }
+    /* ==========================
+   🔵 YEAR HEATMAP (GitHub-like)
+   WITH HARD GAP BETWEEN MONTHS
+   ========================== */
 
-@media (max-width: 768px) {
-    .attendance-grid { grid-template-columns: 1fr; }
-    .stats-grid { grid-template-columns: 1fr; }
-}
+    .calendar {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 12px;
+        padding: 14px;
+    }
+
+    /* Outer wrapper */
+    .year-heatmap-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* Month labels row */
+    .heatmap-month-row {
+        display: grid;
+        grid-template-columns: repeat(var(--week-count), 14px);
+        gap: 6px;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-left: 45px;
+        /* aligns with weekday labels */
+    }
+
+    .month-label {
+        height: 14px;
+        text-align: left;
+    }
+
+    /* Weekday labels column */
+    .heatmap-left-labels {
+        display: grid;
+        grid-template-rows: repeat(7, 14px);
+        gap: 6px;
+        margin-right: 10px;
+        color: var(--text-secondary);
+        font-size: 0.70rem;
+        width: 35px;
+    }
+
+    /* Heatmap horizontal layout */
+    .year-heatmap {
+        display: flex;
+        gap: 12px;
+        /* <-- HARD MONTH GAP */
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    /* Each month block */
+    .month-block {
+        display: flex;
+        gap: 6px;
+        /* small week gap */
+    }
+
+    /* Each week column */
+    .week-column {
+        display: grid;
+        grid-template-rows: repeat(7, 14px);
+        gap: 6px;
+    }
+
+    /* Each day square */
+    .heat-day {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        transition: transform .12s ease, box-shadow .12s ease;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    /* Colors */
+    .heat-day.present {
+        background: #2f81f7;
+    }
+
+    .heat-day.present-2 {
+        background: #5b9fff;
+    }
+
+    .heat-day.present-1 {
+        background: #9fc8ff;
+    }
+
+    .heat-day.half-day {
+        background: #184a8f;
+    }
+
+    .heat-day.absent {
+        background: #0b0b0b;
+        opacity: 0.85;
+    }
+
+    .heat-day.weekend {
+        background: #1a1a1a;
+        opacity: 0.6;
+    }
+
+    /* Today highlight */
+    .heat-day.today {
+        outline: 2px solid #00eaff;
+        box-shadow: 0 0 6px rgba(0, 200, 255, 0.6);
+    }
+
+    /* Hover */
+    .heat-day:hover {
+        transform: translateY(-3px) scale(1.18);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+        z-index: 10;
+    }
+
+    /* Legend */
+    .heatmap-legend {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 10px;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+    }
+
+    .heatmap-legend .box {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Mobile */
+    @media (max-width:600px) {
+        .week-column {
+            grid-template-rows: repeat(7, 10px);
+        }
+
+        .heat-day {
+            width: 10px;
+            height: 10px;
+        }
+
+        .heatmap-left-labels {
+            display: none;
+        }
+    }
+
+
+
+
+    /* Statistics */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+        background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    /* Predictions */
+    .prediction-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .prediction-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .prediction-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(0, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-glow);
+        flex-shrink: 0;
+    }
+
+    .prediction-content h4 {
+        margin-bottom: 5px;
+        font-size: 0.875rem;
+    }
+
+    .prediction-content p {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .calendar-loading,
+    .status-loading,
+    .prediction-loading {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-secondary);
+    }
+
+    @media (max-width:1024px) {
+        .attendance-container {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-actions-card,
+        .calendar-card,
+        .stats-card,
+        .predictions-card {
+            grid-column: 1;
+        }
+    }
+
+    @media (max-width:768px) {
+        .calendar-legend {
+            gap: 10px;
+        }
+
+        .attendance-actions {
+            flex-direction: column;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="/static/js/attendance.js"></script>
 {% endblock %}

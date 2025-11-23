@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productiva - AI Task Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-glow: #00ffff;
+            --secondary-glow: #ff00ff;
+            --accent-glow: #00ff88;
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Three.js Background */
+        #three-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+        }
+
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding: 10px 15px 10px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            color: var(--text-primary);
+            width: 300px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-glow);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+            color: var(--bg-dark);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--glass-border);
+            padding: 80px 1.5rem 1.5rem;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+
+        .progress-container {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-glow), var(--accent-glow));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .sprint-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .workload-meter {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .workload-status {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            margin-top: 70px;
+            padding: 2rem;
+            width: calc(100% - 280px);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .column {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: var(--glass-shadow);
+            transition: all 0.3s ease;
+            min-height: 600px;
+        }
+
+        .column.drag-over {
+            border-color: var(--primary-glow);
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .column:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-glow);
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .column-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .column-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .tasks-container {
+            min-height: 500px;
+        }
+
+        .task-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: grab;
+            transition: all 0.3s ease;
+            position: relative;
+            user-select: none;
+        }
+
+        .task-card.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .task-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary-glow);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.2);
+        }
+
+        .task-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .task-card.high::before {
+            background: #ff4444;
+        }
+
+        .task-card.medium::before {
+            background: #ffaa00;
+        }
+
+        .task-card.low::before {
+            background: #00ff88;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .task-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .task-card:hover .task-actions {
+            opacity: 1;
+        }
+
+        .task-action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-description {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .task-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .task-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+        }
+
+        .task-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        .task-due {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-secondary);
+        }
+
+        .task-assignee {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        /* AI Insight */
+        .ai-insight {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            display: none;
+        }
+
+        .ai-insight.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px;
+            color: var(--primary-glow);
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--glass-shadow);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-glow);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 1.5rem;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: absolute;
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.5rem;
+            box-shadow: var(--glass-shadow);
+            z-index: 100;
+            display: none;
+        }
+
+        .dropdown {
+            position: relative;
+            width: 150px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: var(--text-primary);
+            cursor: pointer;
+            user-select: none;
+            z-index: 200;
+            /* IMPORTANT */
+        }
+
+        .dropdown-selected {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 45px;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 5px 0;
+            display: none;
+            z-index: 300;
+            /* VERY IMPORTANT */
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+
+        .context-menu.show {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .context-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .context-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .context-item.delete {
+            color: #ff4444;
+        }
+
+        .logo-link {
+            text-decoration: none;
+            color: inherit;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .logo-link:hover {
+            opacity: 0.85;
+            cursor: pointer;
+        }
+
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+
+            .main-content {
+                margin-left: 240px;
+                width: calc(100% - 240px);
+            }
+
+            .board {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+
+
+
+        @media (max-width: 480px) {
+            .search-container {
+                display: none;
+            }
+
+            .board {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Three.js Background -->
+    <div id="three-background" class="three-background"></div>
+
+    <div class="app-container">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <a href="{{ url_for('dashboard') }}" class="logo-link">
+                <div class="logo">
+                    <i class="fas fa-brain"></i>
+                    <span>Productiva</span>
+                </div>
+            </a>
+
+
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search tasks...">
+                </div>
+
+                <div class="dropdown" id="priorityDropdown">
+                    <div class="dropdown-selected">All Priorities</div>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" data-value="all">All Priorities</div>
+                        <div class="dropdown-item" data-value="high">High</div>
+                        <div class="dropdown-item" data-value="medium">Medium</div>
+                        <div class="dropdown-item" data-value="low">Low</div>
+                    </div>
+                </div>
+
+
+                <button class="btn-primary" id="addTaskBtn">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Task</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Productivity Overview</h3>
+
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <span>Completion</span>
+                        <span id="completion-percent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="completion-bar"></div>
+                    </div>
+                </div>
+
+                <div class="task-stats">
+                    <div class="sprint-item">
+                        <span>To Do</span>
+                        <span id="todo-count">0</span>
+                    </div>
+                    <div class="sprint-item">
+                        <span>In Progress</span>
+                        <span id="inprogress-count">0</span>
+                    </div>
+                    <div class="sprint-item">
+                        <span>Completed</span>
+                        <span id="completed-count">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Team Analytics</h3>
+
+                <div class="sprint-item">
+                    <span>Total Tasks</span>
+                    <span id="total-tasks">0</span>
+                </div>
+                <div class="sprint-item">
+                    <span>High Priority</span>
+                    <span id="high-priority">0</span>
+                </div>
+                <div class="sprint-item">
+                    <span>Due This Week</span>
+                    <span id="due-soon">0</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">AI Insights</h3>
+
+                <div class="workload-meter">
+                    <div class="workload-status">
+                        <span>Team Workload</span>
+                        <span id="workload-status" style="color: var(--accent-glow);">Balanced</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="workload-bar"></div>
+                    </div>
+                </div>
+
+                <div id="ai-recommendation" class="ai-insight" style="display: block; margin-top: 15px;">
+                    <div class="ai-header">
+                        <i class="fas fa-robot"></i>
+                        <span>AI Suggestion</span>
+                    </div>
+                    <span id="ai-suggestion-text">Add more tasks to get personalized insights</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="board">
+                <!-- To Do Column -->
+                <div class="column" id="todo-column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #ff4444;"></div>
+                            <span>To Do</span>
+                            <div class="column-badge" id="todo-badge">0</div>
+                        </div>
+                    </div>
+
+                    <div class="tasks-container" id="todo-tasks">
+                        <!-- Task cards will be added here by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- In Progress Column -->
+                <div class="column" id="inprogress-column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #ffaa00;"></div>
+                            <span>In Progress</span>
+                            <div class="column-badge" id="inprogress-badge">0</div>
+                        </div>
+                    </div>
+
+                    <div class="tasks-container" id="inprogress-tasks">
+                        <!-- Task cards will be added here by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Completed Column -->
+                <div class="column" id="completed-column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: #00ff88;"></div>
+                            <span>Completed</span>
+                            <div class="column-badge" id="completed-badge">0</div>
+                        </div>
+                    </div>
+
+                    <div class="tasks-container" id="completed-tasks">
+                        <!-- Task cards will be added here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div class="modal" id="addTaskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Create New Task</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+
+            <form id="taskForm">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="taskTitle" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" id="taskDescription"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select class="form-select" id="taskPriority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Due Date</label>
+                    <input type="date" class="form-input" id="taskDueDate">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tags (comma separated)</label>
+                    <input type="text" class="form-input" id="taskTags" placeholder="design, development, urgent">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelTask">Cancel</button>
+                    <button type="submit" class="btn-primary">Create Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-item" id="editTask">
+            <i class="fas fa-edit"></i>
+            <span>Edit</span>
+        </div>
+        <div class="context-item delete" id="deleteTask">
+            <i class="fas fa-trash"></i>
+            <span>Delete</span>
+        </div>
+    </div>
+
+    <script>
+        // Task data model
+        let tasks = {
+            todo: [
+                {
+                    id: 1,
+                    title: 'Design new dashboard layout',
+                    description: 'Create wireframes for the productivity dashboard with glassmorphism effects',
+                    priority: 'high',
+                    dueDate: '2024-01-15',
+                    tags: ['design', 'ui'],
+                    assignee: 'JD',
+                    aiInsight: 'Estimated: 3 hours. Consider mobile-first design for better responsiveness.'
+                },
+                {
+                    id: 2,
+                    title: 'Research AI integration APIs',
+                    description: 'Evaluate different AI services for productivity insights and recommendations',
+                    priority: 'medium',
+                    dueDate: '2024-01-20',
+                    tags: ['research', 'ai'],
+                    assignee: 'AS',
+                    aiInsight: 'Priority: Medium. Start with free tier APIs to test functionality.'
+                }
+            ],
+            inprogress: [
+                {
+                    id: 3,
+                    title: 'Implement drag-and-drop functionality',
+                    description: 'Add smooth drag and drop for task management between columns',
+                    priority: 'high',
+                    dueDate: '2024-01-12',
+                    tags: ['development', 'feature'],
+                    assignee: 'TM',
+                    aiInsight: 'High priority. Blocking other frontend tasks. Estimated: 5 hours.'
+                }
+            ],
+            completed: [
+                {
+                    id: 4,
+                    title: 'Set up project repository',
+                    description: 'Initialize Git repository and set up CI/CD pipeline',
+                    priority: 'low',
+                    dueDate: '2024-01-08',
+                    tags: ['setup', 'devops'],
+                    assignee: 'RJ',
+                    aiInsight: 'Completed ahead of schedule. Good work!'
+                }
+            ]
+        };
+
+        // DOM Elements
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const addTaskModal = document.getElementById('addTaskModal');
+        const closeModal = document.getElementById('closeModal');
+        const cancelTask = document.getElementById('cancelTask');
+        const taskForm = document.getElementById('taskForm');
+        const contextMenu = document.getElementById('contextMenu');
+        const editTaskBtn = document.getElementById('editTask');
+        const deleteTaskBtn = document.getElementById('deleteTask');
+
+        // Initialize the board with tasks
+        function initializeBoard() {
+            renderAllTasks();
+            updateProductivityOverview();
+        }
+
+        // Render all tasks to the DOM
+        function renderAllTasks() {
+            // Clear all task containers
+            document.getElementById('todo-tasks').innerHTML = '';
+            document.getElementById('inprogress-tasks').innerHTML = '';
+            document.getElementById('completed-tasks').innerHTML = '';
+
+            // Render tasks for each column
+            for (const column in tasks) {
+                const container = document.getElementById(`${column}-tasks`);
+                tasks[column].forEach(task => {
+                    container.appendChild(createTaskCard(task, column));
+                });
+            }
+
+            // Update badge counts
+            updateBadgeCounts();
+        }
+
+        // Create a task card element
+        function createTaskCard(task, column) {
+            const taskCard = document.createElement('div');
+            taskCard.className = `task-card ${task.priority}`;
+            taskCard.draggable = true;
+            taskCard.dataset.taskId = task.id;
+            taskCard.dataset.column = column;
+
+            // Format due date
+            const dueDate = new Date(task.dueDate);
+            const formattedDate = dueDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+
+            taskCard.innerHTML = `
+                <div class="task-header">
+                    <div class="task-title">${task.title}</div>
+                    <div class="task-actions">
+                        <button class="task-action-btn ai-insight-btn" title="AI Insight">
+                            <i class="fas fa-lightbulb"></i>
+                        </button>
+                        <button class="task-action-btn context-menu-btn" title="More actions">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="task-description">${task.description}</div>
+                <div class="task-tags">
+                    ${task.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
+                </div>
+                <div class="ai-insight">
+                    <div class="ai-header">
+                        <i class="fas fa-robot"></i>
+                        <span>AI Insight</span>
+                    </div>
+                    ${task.aiInsight}
+                </div>
+                <div class="task-footer">
+                    <div class="task-due">
+                        <i class="far fa-calendar"></i>
+                        <span>${formattedDate}</span>
+                    </div>
+                    <div class="task-assignee">${task.assignee}</div>
+                </div>
+            `;
+
+            // Add event listeners
+            const aiInsightBtn = taskCard.querySelector('.ai-insight-btn');
+            const contextMenuBtn = taskCard.querySelector('.context-menu-btn');
+            const aiInsight = taskCard.querySelector('.ai-insight');
+
+            aiInsightBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                aiInsight.classList.toggle('show');
+            });
+
+            contextMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showContextMenu(e, task, column);
+            });
+
+            // Drag and drop events
+            taskCard.addEventListener('dragstart', handleDragStart);
+            taskCard.addEventListener('dragend', handleDragEnd);
+
+            return taskCard;
+        }
+
+        // Show context menu
+        function showContextMenu(e, task, column) {
+            const rect = e.target.getBoundingClientRect();
+            contextMenu.style.top = `${rect.bottom + 5}px`;
+            contextMenu.style.left = `${rect.left}px`;
+            contextMenu.classList.add('show');
+
+            // Store current task info
+            contextMenu.dataset.taskId = task.id;
+            contextMenu.dataset.column = column;
+
+            // Close context menu when clicking elsewhere
+            document.addEventListener('click', closeContextMenu);
+        }
+
+        // Close context menu
+        function closeContextMenu() {
+            contextMenu.classList.remove('show');
+            document.removeEventListener('click', closeContextMenu);
+        }
+
+        // Drag and drop functionality
+        let draggedTask = null;
+        let draggedTaskElement = null;
+
+        function handleDragStart(e) {
+            draggedTaskElement = this;
+            this.classList.add('dragging');
+
+            // Store the task id and source column
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                taskId: this.dataset.taskId,
+                sourceColumn: this.dataset.column
+            }));
+
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+            draggedTaskElement = null;
+
+            // Remove drag over styles from all columns
+            document.querySelectorAll('.column').forEach(column => {
+                column.classList.remove('drag-over');
+            });
+        }
+
+        // Set up column drop zones
+        document.querySelectorAll('.column').forEach(column => {
+            column.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                this.classList.add('drag-over');
+            });
+
+            column.addEventListener('dragenter', function (e) {
+                e.preventDefault();
+            });
+
+            column.addEventListener('dragleave', function () {
+                this.classList.remove('drag-over');
+            });
+
+            column.addEventListener('drop', function (e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+
+                try {
+                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    const taskId = parseInt(data.taskId);
+                    const sourceColumn = data.sourceColumn;
+                    const targetColumn = this.id.replace('-column', '');
+
+                    if (sourceColumn === targetColumn) return;
+
+                    // Find the task in the data model
+                    let task = null;
+                    const taskIndex = tasks[sourceColumn].findIndex(t => t.id === taskId);
+
+                    if (taskIndex !== -1) {
+                        task = tasks[sourceColumn][taskIndex];
+
+                        // Move task between columns
+                        tasks[sourceColumn].splice(taskIndex, 1);
+                        tasks[targetColumn].push(task);
+
+                        // Update the DOM
+                        const tasksContainer = this.querySelector('.tasks-container');
+
+                        // Remove from old column
+                        if (draggedTaskElement) {
+                            draggedTaskElement.remove();
+                        }
+
+                        // Add to new column with updated data attribute
+                        const newTaskCard = createTaskCard(task, targetColumn);
+                        tasksContainer.appendChild(newTaskCard);
+
+                        // Update all counts and analytics
+                        updateBadgeCounts();
+                        updateProductivityOverview();
+                    }
+                } catch (error) {
+                    console.error('Error during drag and drop:', error);
+                }
+            });
+        });
+
+        // Update column badge counts
+        function updateBadgeCounts() {
+            document.getElementById('todo-badge').textContent = tasks.todo.length;
+            document.getElementById('inprogress-badge').textContent = tasks.inprogress.length;
+            document.getElementById('completed-badge').textContent = tasks.completed.length;
+        }
+
+        // Update productivity overview with real data
+        function updateProductivityOverview() {
+            const totalTasks = tasks.todo.length + tasks.inprogress.length + tasks.completed.length;
+            const completedTasks = tasks.completed.length;
+            const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+            // Update completion stats
+            document.getElementById('completion-percent').textContent = `${completionPercentage}%`;
+            document.getElementById('completion-bar').style.width = `${completionPercentage}%`;
+
+            // Update task counts
+            document.getElementById('todo-count').textContent = tasks.todo.length;
+            document.getElementById('inprogress-count').textContent = tasks.inprogress.length;
+            document.getElementById('completed-count').textContent = tasks.completed.length;
+            document.getElementById('total-tasks').textContent = totalTasks;
+
+            // Count high priority tasks
+            const highPriorityCount = [...tasks.todo, ...tasks.inprogress].filter(task => task.priority === 'high').length;
+            document.getElementById('high-priority').textContent = highPriorityCount;
+
+            // Count tasks due this week
+            const today = new Date();
+            const nextWeek = new Date(today);
+            nextWeek.setDate(today.getDate() + 7);
+
+            const dueSoonCount = [...tasks.todo, ...tasks.inprogress].filter(task => {
+                const dueDate = new Date(task.dueDate);
+                return dueDate >= today && dueDate <= nextWeek;
+            }).length;
+
+            document.getElementById('due-soon').textContent = dueSoonCount;
+
+            // Update workload indicator
+            const workloadPercentage = Math.min(100, Math.round((tasks.inprogress.length / Math.max(1, totalTasks)) * 100 * 2));
+            document.getElementById('workload-bar').style.width = `${workloadPercentage}%`;
+
+            // Update workload status text
+            let workloadStatus = 'Balanced';
+            let statusColor = 'var(--accent-glow)';
+
+            if (workloadPercentage > 80) {
+                workloadStatus = 'Heavy';
+                statusColor = '#ff4444';
+            } else if (workloadPercentage > 60) {
+                workloadStatus = 'Moderate';
+                statusColor = '#ffaa00';
+            }
+
+            document.getElementById('workload-status').textContent = workloadStatus;
+            document.getElementById('workload-status').style.color = statusColor;
+
+            // Generate AI recommendation based on current state
+            let aiSuggestion = 'Add more tasks to get personalized insights';
+
+            if (totalTasks === 0) {
+                aiSuggestion = 'Start by adding your first task to the To Do column';
+            } else if (completionPercentage < 30) {
+                aiSuggestion = 'Focus on completing tasks to improve your completion rate';
+            } else if (completionPercentage > 70) {
+                aiSuggestion = 'Great progress! Consider adding more challenging tasks';
+            } else if (highPriorityCount > 3) {
+                aiSuggestion = 'You have several high-priority tasks. Focus on completing them first';
+            } else if (dueSoonCount > 0) {
+                aiSuggestion = `You have ${dueSoonCount} tasks due soon. Prioritize these to avoid delays`;
+            } else if (tasks.inprogress.length > 4) {
+                aiSuggestion = 'You have many tasks in progress. Consider focusing on fewer at a time';
+            }
+
+            document.getElementById('ai-suggestion-text').textContent = aiSuggestion;
+        }
+
+        // Modal functionality
+        addTaskBtn.addEventListener('click', () => {
+            addTaskModal.classList.add('show');
+        });
+
+        closeModal.addEventListener('click', () => {
+            addTaskModal.classList.remove('show');
+        });
+
+        cancelTask.addEventListener('click', () => {
+            addTaskModal.classList.remove('show');
+        });
+
+        // Add new task
+        taskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('taskTitle').value;
+            const description = document.getElementById('taskDescription').value;
+            const priority = document.getElementById('taskPriority').value;
+            const dueDate = document.getElementById('taskDueDate').value;
+            const tags = document.getElementById('taskTags').value.split(',').map(tag => tag.trim());
+
+            const newTask = {
+                id: Date.now(),
+                title,
+                description,
+                priority,
+                dueDate,
+                tags,
+                assignee: 'You',
+                aiInsight: generateAIInsight({ title, description, priority })
+            };
+
+            // Add to data model
+            tasks.todo.push(newTask);
+
+            // Add to DOM
+            const todoTasks = document.getElementById('todo-tasks');
+            todoTasks.appendChild(createTaskCard(newTask, 'todo'));
+
+            // Update all counts and analytics
+            updateBadgeCounts();
+            updateProductivityOverview();
+
+            // Reset form and close modal
+            taskForm.reset();
+            addTaskModal.classList.remove('show');
+        });
+
+        // Generate AI insight for a task
+        function generateAIInsight(task) {
+            const insights = [
+                `Estimated: ${Math.floor(Math.random() * 8) + 2} hours. ${task.priority === 'high' ? 'High priority task.' : 'Can be scheduled later.'}`,
+                `AI Tip: Break into smaller subtasks for better tracking and estimation.`,
+                `Urgency: ${task.priority === 'high' ? 'Critical' : task.priority === 'medium' ? 'Moderate' : 'Low'}. Focus on dependencies first.`,
+                `Suggested approach: Start with research and planning phase before implementation.`,
+                `Team workload: ${Math.random() > 0.5 ? 'Light' : 'Heavy'}. ${Math.random() > 0.5 ? 'Good time to tackle this task.' : 'Consider delegating or postponing.'}`
+            ];
+
+            return insights[Math.floor(Math.random() * insights.length)];
+        }
+
+        // Context menu actions
+        editTaskBtn.addEventListener('click', () => {
+            const taskId = contextMenu.dataset.taskId;
+            const column = contextMenu.dataset.column;
+            // In a real app, we would open an edit modal here
+            alert(`Editing task ${taskId} from ${column}`);
+            closeContextMenu();
+        });
+
+        deleteTaskBtn.addEventListener('click', () => {
+            const taskId = contextMenu.dataset.taskId;
+            const column = contextMenu.dataset.column;
+
+            // Remove from data model
+            const taskIndex = tasks[column].findIndex(task => task.id == taskId);
+            if (taskIndex !== -1) {
+                tasks[column].splice(taskIndex, 1);
+
+                // Remove from DOM
+                const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+                if (taskElement) {
+                    taskElement.remove();
+                }
+
+                // Update all counts and analytics
+                updateBadgeCounts();
+                updateProductivityOverview();
+            }
+
+            closeContextMenu();
+        });
+
+        // Initialize the board when page loads
+        document.addEventListener('DOMContentLoaded', initializeBoard);
+
+        const dropdown = document.getElementById("priorityDropdown");
+        const selected = dropdown.querySelector(".dropdown-selected");
+        const menu = dropdown.querySelector(".dropdown-menu");
+
+        dropdown.addEventListener("click", () => {
+            menu.classList.toggle("show");
+        });
+
+        // Handle selection
+        menu.querySelectorAll(".dropdown-item").forEach(item => {
+            item.addEventListener("click", (e) => {
+                const value = e.target.dataset.value;
+                selected.textContent = e.target.textContent;
+
+                menu.classList.remove("show");
+
+                filterTasksByPriority(value);
+            });
+        });
+
+        // Hide on outside click
+        document.addEventListener("click", (e) => {
+            if (!dropdown.contains(e.target)) {
+                menu.classList.remove("show");
+            }
+        });
+
+        const searchInput = document.querySelector(".search-box input");
+
+        searchInput.addEventListener("input", function () {
+            const query = this.value.toLowerCase();
+
+            const cards = document.querySelectorAll(".task-card");
+
+            cards.forEach(card => {
+                const title = card.querySelector(".task-title").textContent.toLowerCase();
+                const description = card.querySelector(".task-description").textContent.toLowerCase();
+                const tags = card.querySelector(".task-tags").textContent.toLowerCase();
+                const assignee = card.querySelector(".task-assignee").textContent.toLowerCase(); // NEW
+
+                const match =
+                    title.includes(query) ||
+                    description.includes(query) ||
+                    tags.includes(query) ||
+                    assignee.includes(query); // NEW
+
+                card.style.display = match ? "block" : "none";
+            });
+        });
+
+        function filterTasksByPriority(priority) {
+            const cards = document.querySelectorAll(".task-card");
+
+            cards.forEach(card => {
+                const cardPriority =
+                    card.classList.contains("high")
+                        ? "high"
+                        : card.classList.contains("medium")
+                            ? "medium"
+                            : "low";
+
+                if (priority === "all" || cardPriority === priority) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        }
+
+
+
+    </script>
+</body>
+
+</html>

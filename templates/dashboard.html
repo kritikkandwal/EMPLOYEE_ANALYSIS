@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,18 +8,21 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <script type="module" src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.module.js"></script>
+    <script src="/static/js/advanced_prediction.js"></script>
+
 </head>
+
 <body class="futuristic-theme">
     <div id="three-background" class="three-background"></div>
-    
+
     <div class="dashboard-container">
         {% include 'components/sidebar.html' %}
-        
+
         <main class="main-content">
             {% include 'components/navbar.html' %}
-            
+
             <div class="dashboard-grid">
-                
+
                 <!-- Productivity Overview -->
                 <div class="glass-card overview-card">
                     <h2 class="card-title">Productivity Overview</h2>
@@ -40,7 +44,8 @@
                                 <span class="metric-label">Task Efficiency</span>
                             </div>
                             <div class="metric">
-                                <span class="metric-value {% if metrics and metrics.weekly_trend > 0 %}positive{% else %}negative{% endif %}">
+                                <span
+                                    class="metric-value {% if metrics and metrics.weekly_trend > 0 %}positive{% else %}negative{% endif %}">
                                     {{ metrics.weekly_trend if metrics else 0 }}%
                                 </span>
                                 <span class="metric-label">Weekly Trend</span>
@@ -48,7 +53,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- AI Insights -->
                 <div class="glass-card insights-card">
                     <h2 class="card-title">AI Insights</h2>
@@ -76,7 +81,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Charts -->
                 <div class="glass-card chart-card">
                     <h2 class="card-title">Productivity Trend</h2>
@@ -87,30 +92,30 @@
                     <h2 class="card-title">Focus Distribution</h2>
                     <div class="chart-container"><canvas id="focusChart"></canvas></div>
                 </div>
-                
+
                 <!-- Badges -->
                 <div class="glass-card badges-card">
                     <h2 class="card-title">Your Badges</h2>
                     <div class="badges-grid">
                         {% if badges and badges|length > 0 %}
-                            {% for badge in badges %}
-                                <div class="badge-item {{ badge.level }}">
-                                    <div class="badge-icon">🏆</div>
-                                    <div class="badge-info">
-                                        <h4>{{ badge.name }}</h4>
-                                        <p>{{ badge.description }}</p>
-                                    </div>
-                                    <span class="badge-level">{{ badge.level }}</span>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="no-badges">
-                                <p>Complete more tasks to earn badges!</p>
+                        {% for badge in badges %}
+                        <div class="badge-item {{ badge.level }}">
+                            <div class="badge-icon">🏆</div>
+                            <div class="badge-info">
+                                <h4>{{ badge.name }}</h4>
+                                <p>{{ badge.description }}</p>
                             </div>
+                            <span class="badge-level">{{ badge.level }}</span>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="no-badges">
+                            <p>Complete more tasks to earn badges!</p>
+                        </div>
                         {% endif %}
                     </div>
                 </div>
-                
+
                 <!-- Radar Chart -->
                 <div class="glass-card chart-card">
                     <h2 class="card-title">Performance Analysis</h2>
@@ -119,11 +124,13 @@
             </div>
         </main>
     </div>
+    <script src="/static/js/advanced_prediction.js"></script>
 
     <script type="module" src="{{ url_for('static', filename='js/threejs-scene.js') }}"></script>
-<script type="module" src="{{ url_for('static', filename='js/charts.js') }}"></script>
-<script type="module" src="{{ url_for('static', filename='js/lenis-smoothscroll.js') }}"></script>
-<script type="module" src="{{ url_for('static', filename='js/animations.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/lenis-smoothscroll.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/animations.js') }}"></script>
 
 </body>
+
 </html>

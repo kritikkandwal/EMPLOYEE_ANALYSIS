@@ -136,6 +136,122 @@ class ProductivityCharts {
     }
 }
 
+// Advanced prediction functionality
+class AdvancedPrediction {
+    constructor() {
+        this.predictionData = null;
+    }
+
+    async loadAdvancedPrediction() {
+        try {
+            const response = await fetch('/api/advanced-predict/productivity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ days: 7 })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.predictionData = data;
+                this.updatePredictionDisplay(data);
+            }
+        } catch (error) {
+            console.error('Advanced prediction error:', error);
+        }
+    }
+
+    updatePredictionDisplay(data) {
+        // Update prediction score
+        const scoreElement = document.getElementById('advancedPredictionScore');
+        if (scoreElement) {
+            scoreElement.textContent = data.prediction;
+            
+            // Color code based on score
+            if (data.prediction >= 80) {
+                scoreElement.style.color = 'var(--accent-glow)';
+            } else if (data.prediction >= 60) {
+                scoreElement.style.color = '#ffaa00';
+            } else {
+                scoreElement.style.color = '#ff4444';
+            }
+        }
+
+        // Update confidence
+        const confidenceElement = document.getElementById('confidenceValue');
+        if (confidenceElement) {
+            confidenceElement.textContent = `${Math.round(data.confidence * 100)}% confidence`;
+        }
+
+        // Update model used
+        const modelElement = document.getElementById('modelUsed');
+        if (modelElement) {
+            modelElement.textContent = data.model_used || 'Unknown';
+        }
+
+        // Update key factors
+        this.updateKeyFactors(data.feature_contributions);
+    }
+
+    updateKeyFactors(contributions) {
+        const factorsContainer = document.getElementById('keyFactors');
+        if (!factorsContainer || !contributions) return;
+
+        // Sort factors by absolute contribution
+        const sortedFactors = Object.entries(contributions)
+            .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+            .slice(0, 3); // Top 3 factors
+
+        factorsContainer.innerHTML = sortedFactors.map(([factor, value]) => `
+            <div class="factor-item">
+                <span class="factor-name">${this.formatFactorName(factor)}</span>
+                <span class="factor-value ${value > 0 ? 'positive' : 'negative'}">
+                    ${value > 0 ? '+' : ''}${value.toFixed(2)}
+                </span>
+            </div>
+        `).join('');
+    }
+
+    formatFactorName(factor) {
+        const nameMap = {
+            'focus_ratio': 'Focus Level',
+            'task_completion_rate': 'Task Completion',
+            'burnout_risk': 'Burnout Risk',
+            'recovery_potential': 'Recovery Potential',
+            'consistency_index': 'Consistency',
+            'momentum': 'Momentum',
+            'rolling_7d_mean': 'Recent Average'
+        };
+        return nameMap[factor] || factor.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+}
+
+// Initialize advanced prediction
+document.addEventListener('DOMContentLoaded', function() {
+    window.advancedPrediction = new AdvancedPrediction();
+    setTimeout(() => {
+        window.advancedPrediction.loadAdvancedPrediction();
+    }, 1000);
+});
+
+// Refresh prediction
+async function refreshAdvancedPrediction() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+    btn.disabled = true;
+    
+    await window.advancedPrediction.loadAdvancedPrediction();
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 1000);
+}
+
 // ✅ Initialize after DOM loads
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {

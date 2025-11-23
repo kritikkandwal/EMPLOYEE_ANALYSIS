@@ -10,7 +10,7 @@ class ProductivityApp {
     init() {
         this.initializeApp();
         this.setupEventListeners();
-        this.loadUserData();
+        // this.loadUserData();
         this.setupServiceWorker();
     }
 

@@ -6,6 +6,321 @@
     background: linear-gradient(135deg, var(--bg-dark) 0%, #0f0f1f 100%);
 }
 
+
+/* ML Predictions Card */
+.ml-predictions-card {
+    grid-column: 1 / -1;
+    margin-top: 20px;
+}
+
+.ml-models-tabs {
+    margin-top: 20px;
+}
+
+.tab-buttons {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.tab-btn.active {
+    background: var(--primary-glow);
+    color: var(--bg-dark);
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+/* Prediction Styles */
+.prediction-main {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.prediction-score {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--primary-glow), var(--accent-glow));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.confidence-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid var(--accent-glow);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    color: var(--accent-glow);
+}
+
+/* Weekly Predictions */
+.weekly-predictions {
+    margin-top: 1rem;
+}
+
+.week-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.avg-attendance {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1rem;
+}
+
+.day-prediction {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.day-name {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.day-probability {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.day-probability.high {
+    color: var(--accent-glow);
+}
+
+.day-probability.medium {
+    color: #ffaa00;
+}
+
+.day-probability.low {
+    color: #ff4444;
+}
+
+.day-date {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Risk Assessment */
+.risk-assessment {
+    text-align: center;
+}
+
+.risk-badge {
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+.risk-badge.high {
+    background: rgba(255, 68, 68, 0.2);
+    color: #ff4444;
+    border: 1px solid #ff4444;
+}
+
+.risk-badge.medium {
+    background: rgba(255, 170, 0, 0.2);
+    color: #ffaa00;
+    border: 1px solid #ffaa00;
+}
+
+.risk-badge.low {
+    background: rgba(0, 255, 136, 0.2);
+    color: var(--accent-glow);
+    border: 1px solid var(--accent-glow);
+}
+
+.risk-probability {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.risk-factors {
+    text-align: left;
+}
+
+.risk-factors h5 {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+.risk-factors ul {
+    list-style: none;
+    padding: 0;
+}
+
+.risk-factors li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.risk-factors li:last-child {
+    border-bottom: none;
+}
+
+/* ML Actions */
+.ml-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Streak Prediction */
+.streak-prediction {
+    text-align: center;
+}
+
+.streak-current,
+.streak-continuation,
+.streak-forecast {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+}
+
+.streak-current strong {
+    font-size: 2rem;
+    color: var(--primary-glow);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Advanced Prediction Styles */
+.advanced-prediction-card {
+    background: linear-gradient(135deg, 
+        rgba(0, 255, 255, 0.05) 0%,
+        rgba(255, 0, 255, 0.05) 100%);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.prediction-main {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.prediction-score {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--primary-glow), var(--accent-glow));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.prediction-label {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.confidence-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid var(--accent-glow);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    color: var(--accent-glow);
+}
+
+.prediction-details {
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+}
+
+.detail-item span:first-child {
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 100px;
+}
+
+.factors-list {
+    flex: 1;
+}
+
+.factor-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+}
+
+.factor-name {
+    font-size: 0.875rem;
+}
+
+.factor-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.factor-value.positive {
+    color: var(--accent-glow);
+}
+
+.factor-value.negative {
+    color: #ff4444;
+}
+
 .main-content.full-width {
     margin-left: 0;
 }

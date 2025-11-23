@@ -1,7 +1,8 @@
 """
 Productivity models and calculations
 """
-from .user import db
+from .database import db
+
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import numpy as np

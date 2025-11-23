@@ -6,8 +6,8 @@ from ml_models.badge_recommender import BadgeRecommender
 from datetime import datetime, timedelta
 from extensions import db
 import json
-from routes.dashboard import dashboard_bp
-app.register_blueprint(dashboard_bp)
+# from routes.dashboard import dashboard_bp
+# app.register_blueprint(dashboard_bp)
 
 dashboard_bp = Blueprint('dashboard', __name__)
 

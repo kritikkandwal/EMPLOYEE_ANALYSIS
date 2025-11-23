@@ -1,4 +1,14 @@
-# Models package initialization
-from .user import User, ProductivityLog, Badge, db
+from .database import db
+from .user import User, ProductivityLog, Badge
+from .attendance import AttendanceLog
+from .productivity import ProductivityAnalyzer, ProductivityCalculator
 
-__all__ = ['User', 'ProductivityLog', 'Badge', 'db']
+__all__ = [
+    "db",
+    "User",
+    "ProductivityLog",
+    "Badge",
+    "AttendanceLog",
+    "ProductivityAnalyzer",
+    "ProductivityCalculator",
+]
