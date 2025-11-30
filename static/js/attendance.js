@@ -232,8 +232,6 @@ class AttendanceManager {
         }
     }
 
-    
-
 
 
     /* -------------------------- ATTENDANCE LOG -------------------------- */
@@ -272,13 +270,21 @@ class AttendanceManager {
             const res = await fetch('/api/attendance/current-status');
             const data = await res.json();
 
-            // stats
-            document.getElementById('presentDays').textContent = data.present_days ?? 0;
-            document.getElementById('attendanceRate').textContent =
-                data.present_days > 0 ? "100%" : "0%";
-            document.getElementById('totalHours').textContent = data.total_hours ?? 0;
-            document.getElementById('currentStreak').textContent = data.present_days ?? 0;
+            // --- IMPORTANT CHANGE: use monthly aggregates returned by the backend ---
+            // Use the monthly aggregated fields (present_days_month, attendance_rate_month, total_hours_month, current_streak_month)
+            // These are computed server-side by combining DB rows and random-generated past days.
+            const presentMonth = data.present_days_month ?? 0;
+            const attendanceRateMonth = (data.attendance_rate_month ?? 0) + "%";
+            const totalHoursMonth = data.total_hours_month ?? 0;
+            const currentStreakMonth = data.current_streak_month ?? 0;
 
+            // Update UI with monthly aggregated stats
+            document.getElementById('presentDays').textContent = presentMonth;
+            document.getElementById('attendanceRate').textContent = attendanceRateMonth;
+            document.getElementById('totalHours').textContent = totalHoursMonth;
+            document.getElementById('currentStreak').textContent = currentStreakMonth;
+
+            // Keep the today's status card identical to previous behaviour:
             const todayStatus = document.getElementById('todayStatus');
 
             if (!data.logged_in) {
@@ -451,10 +457,6 @@ class AttendanceManager {
         }
     }
 
-
-
-
-
     _getMonthRequestsForRange(startDate, endDate) {
         const months = new Set();
         const cursor = new Date(startDate);
@@ -624,7 +626,136 @@ async function trainModels() {
     }
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching functionality
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Remove active class from all buttons and panes
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanes.forEach(pane => pane.classList.remove('active'));
+            
+            // Add active class to clicked button
+            button.classList.add('active');
+            
+            // Show corresponding tab pane
+            const tabId = button.getAttribute('data-tab');
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+        });
+    });
+    
+    // Mock data population for demonstration
+    populateMockData();
+});
 
+function populateMockData() {
+    // Tomorrow tab
+    document.getElementById('tomorrowProbability').textContent = '87%';
+    document.getElementById('confidenceLevel').textContent = 'High Confidence';
+    document.getElementById('expectedHours').textContent = '8.2 hours';
+    document.getElementById('modelUsed').textContent = 'XGBoost v2.1';
+    
+    // Weekly tab
+    document.getElementById('weeklyAvg').textContent = '78%';
+    
+    const daysGrid = document.getElementById('weeklyDaysGrid');
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const dates = ['15', '16', '17', '18', '19', '20', '21'];
+    const probabilities = ['85%', '90%', '45%', '92%', '88%', '15%', '10%'];
+    
+    daysGrid.innerHTML = '';
+    days.forEach((day, index) => {
+        daysGrid.innerHTML += `
+            <div class="day-prediction">
+                <div class="day-name">${day}</div>
+                <div class="day-probability">${probabilities[index]}</div>
+                <div class="day-date">${dates[index]}</div>
+            </div>
+        `;
+    });
+    
+    // Streak tab
+    document.getElementById('currentStreak').textContent = '12';
+    document.getElementById('streakProbability').textContent = '92%';
+    document.getElementById('expectedContinuation').textContent = '5';
+    
+    // Absence tab
+    document.getElementById('absenceProbability').textContent = '13%';
+    
+    const riskFactors = document.getElementById('riskFactorsList');
+    riskFactors.innerHTML = `
+        <li>Unusual late logins in past week</li>
+        <li>Lower productivity on Thursdays</li>
+        <li>Approaching project deadline stress</li>
+    `;
+}
+
+function refreshPredictions() {
+    // Show loading state
+    document.querySelectorAll('.tab-pane.active .prediction-score, .tab-pane.active .day-probability').forEach(el => {
+        el.textContent = '...';
+    });
+    
+    // Simulate API call delay
+    setTimeout(() => {
+        populateMockData();
+        // Show success feedback
+        const toast = document.createElement('div');
+        toast.textContent = 'Predictions updated successfully!';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(30, 30, 50, 0.9);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            border-left: 4px solid #4CAF50;
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 3000);
+    }, 1500);
+}
+
+function trainModels() {
+    // Show loading state
+    const trainBtn = document.querySelector('.ml-actions .btn:nth-child(2)');
+    const originalText = trainBtn.innerHTML;
+    trainBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Training...';
+    trainBtn.disabled = true;
+    
+    // Simulate training process
+    setTimeout(() => {
+        trainBtn.innerHTML = originalText;
+        trainBtn.disabled = false;
+        
+        // Show success feedback
+        const toast = document.createElement('div');
+        toast.textContent = 'Models retrained successfully!';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(30, 30, 50, 0.9);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            border-left: 4px solid #4CAF50;
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 3000);
+    }, 3000);
+}
 
 
 

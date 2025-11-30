@@ -54,7 +54,7 @@
             </div>
         </div>
     </div>
-<br>
+    <br>
     <!-- Statistics Card -->
     <div class="glass-card stats-card">
         <h3>Monthly Statistics</h3>
@@ -77,7 +77,7 @@
             </div>
         </div>
     </div>
-<br>
+    <br>
     <!-- Add this section after the Statistics Card -->
     <div class="glass-card ml-predictions-card">
         <h3>🤖 AI Attendance Predictions</h3>
@@ -177,7 +177,7 @@
             </button>
         </div>
     </div>
-<br>
+    <br>
     <!-- AI Predictions Card -->
     <div class="glass-card predictions-card">
         <h3>AI Predictions & Insights</h3>
@@ -346,7 +346,453 @@
     }
 
 
+    /* Enhanced ML Predictions Card Styles */
+    .ml-predictions-card {
+        background: linear-gradient(135deg, rgba(15, 15, 25, 0.9), rgba(30, 30, 50, 0.8));
+        border: 1px solid rgba(100, 100, 255, 0.2);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+    }
 
+    .ml-predictions-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(100, 150, 255, 0.5), transparent);
+    }
+
+    .ml-predictions-card h3 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        color: #fff;
+        text-shadow: 0 0 10px rgba(100, 150, 255, 0.5);
+    }
+
+    /* Tab Navigation */
+    .ml-models-tabs {
+        margin-bottom: 20px;
+    }
+
+    .tab-buttons {
+        display: flex;
+        background: rgba(20, 20, 35, 0.8);
+        border-radius: 12px;
+        padding: 4px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(100, 100, 255, 0.1);
+    }
+
+    .tab-btn {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: 12px 16px;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tab-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s;
+    }
+
+    .tab-btn:hover::before {
+        left: 100%;
+    }
+
+    .tab-btn:hover {
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(100, 100, 255, 0.1);
+    }
+
+    .tab-btn.active {
+        background: linear-gradient(135deg, rgba(80, 120, 255, 0.3), rgba(100, 150, 255, 0.2));
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(80, 120, 255, 0.3);
+    }
+
+    /* Tab Content */
+    .tab-content {
+        min-height: 280px;
+        position: relative;
+    }
+
+    .tab-pane {
+        display: none;
+        animation: fadeIn 0.5s ease forwards;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Tomorrow Prediction */
+    #tomorrow-tab {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 20px 0;
+    }
+
+    .prediction-main {
+        margin-bottom: 25px;
+    }
+
+    .prediction-score {
+        font-size: 4rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+        text-shadow: 0 0 20px rgba(79, 172, 254, 0.3);
+        line-height: 1;
+    }
+
+    .prediction-label {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 15px;
+    }
+
+    .confidence-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: rgba(30, 30, 50, 0.7);
+        border-radius: 20px;
+        border: 1px solid rgba(100, 150, 255, 0.3);
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .confidence-badge i {
+        color: #4facfe;
+    }
+
+    .prediction-details {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .detail-item span:first-child {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 5px;
+    }
+
+    .detail-item span:last-child {
+        font-weight: 600;
+        color: #fff;
+    }
+
+    /* Weekly Trend */
+    .weekly-predictions {
+        width: 100%;
+    }
+
+    .week-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .week-header h4 {
+        margin: 0;
+        color: #fff;
+    }
+
+    .avg-attendance {
+        background: rgba(30, 30, 50, 0.7);
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .days-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+    }
+
+    .day-prediction {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 15px 5px;
+        background: rgba(30, 30, 50, 0.5);
+        border-radius: 12px;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+    .day-prediction:hover {
+        transform: translateY(-5px);
+        background: rgba(40, 40, 60, 0.7);
+    }
+
+    .day-name {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 8px;
+    }
+
+    .day-probability {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: #fff;
+    }
+
+    .day-date {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Streak Forecast */
+    .streak-prediction {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 10px 0;
+    }
+
+    .streak-current,
+    .streak-continuation,
+    .streak-forecast {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: rgba(30, 30, 50, 0.5);
+        border-radius: 12px;
+        transition: background 0.3s ease;
+    }
+
+    .streak-current:hover,
+    .streak-continuation:hover,
+    .streak-forecast:hover {
+        background: rgba(40, 40, 60, 0.7);
+    }
+
+    .streak-current span,
+    .streak-continuation span,
+    .streak-forecast span {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .streak-current strong,
+    .streak-continuation strong,
+    .streak-forecast strong {
+        color: #fff;
+        font-size: 1.2rem;
+    }
+
+    /* Absence Risk */
+    .risk-assessment {
+        padding: 10px 0;
+    }
+
+    .risk-level {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .risk-badge {
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .risk-badge.low {
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1));
+        color: #4CAF50;
+        border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+
+    .risk-badge.medium {
+        background: linear-gradient(135deg, rgba(255, 152, 0, 0.2), rgba(255, 152, 0, 0.1));
+        color: #FF9800;
+        border: 1px solid rgba(255, 152, 0, 0.3);
+    }
+
+    .risk-badge.high {
+        background: linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(244, 67, 54, 0.1));
+        color: #F44336;
+        border: 1px solid rgba(244, 67, 54, 0.3);
+    }
+
+    .risk-probability {
+        text-align: center;
+        margin-bottom: 25px;
+        padding: 15px;
+        background: rgba(30, 30, 50, 0.5);
+        border-radius: 12px;
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .risk-probability strong {
+        color: #fff;
+        font-size: 1.3rem;
+    }
+
+    .risk-factors h5 {
+        margin-bottom: 15px;
+        color: #fff;
+        font-size: 1.1rem;
+    }
+
+    #riskFactorsList {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    #riskFactorsList li {
+        padding: 12px 15px;
+        margin-bottom: 8px;
+        background: rgba(30, 30, 50, 0.5);
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.8);
+        transition: background 0.3s ease;
+        position: relative;
+        padding-left: 40px;
+    }
+
+    #riskFactorsList li:hover {
+        background: rgba(40, 40, 60, 0.7);
+    }
+
+    #riskFactorsList li::before {
+        content: '⚠️';
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    /* ML Actions */
+    .ml-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .ml-actions .btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(100, 150, 255, 0.3);
+        background: rgba(30, 30, 50, 0.5);
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .ml-actions .btn:hover {
+        background: rgba(40, 40, 60, 0.7);
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .tab-buttons {
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1 0 45%;
+            margin-bottom: 5px;
+        }
+
+        .days-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .prediction-details {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .ml-actions {
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .days-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .tab-btn {
+            flex: 1 0 100%;
+        }
+
+        .prediction-score {
+            font-size: 3rem;
+        }
+    }
 
     /* Statistics */
     .stats-grid {
@@ -455,4 +901,5 @@
 
 {% block extra_js %}
 <script src="/static/js/attendance.js"></script>
+
 {% endblock %}

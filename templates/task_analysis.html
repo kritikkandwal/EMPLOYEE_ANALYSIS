@@ -904,55 +904,114 @@
     </div>
 
     <script>
-        // Task data model
-        let tasks = {
+        // Task data model - Load from localStorage or initialize
+        let tasks = JSON.parse(localStorage.getItem('productiva_tasks')) || {
             todo: [
                 {
                     id: 1,
                     title: 'Design new dashboard layout',
                     description: 'Create wireframes for the productivity dashboard with glassmorphism effects',
                     priority: 'high',
-                    dueDate: '2024-01-15',
+                    dueDate: new Date().toISOString().split('T')[0],
                     tags: ['design', 'ui'],
-                    assignee: 'JD',
+                    assignee: 'YOU',
                     aiInsight: 'Estimated: 3 hours. Consider mobile-first design for better responsiveness.'
                 },
-                {
-                    id: 2,
-                    title: 'Research AI integration APIs',
-                    description: 'Evaluate different AI services for productivity insights and recommendations',
-                    priority: 'medium',
-                    dueDate: '2024-01-20',
-                    tags: ['research', 'ai'],
-                    assignee: 'AS',
-                    aiInsight: 'Priority: Medium. Start with free tier APIs to test functionality.'
-                }
+                // {
+                //     id: 2,
+                //     title: 'Research AI integration APIs',
+                //     description: 'Evaluate different AI services for productivity insights and recommendations',
+                //     priority: 'medium',
+                //     dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                //     tags: ['research', 'ai'],
+                //     assignee: 'AS',
+                //     aiInsight: 'Priority: Medium. Start with free tier APIs to test functionality.'
+                // }
             ],
-            inprogress: [
-                {
-                    id: 3,
-                    title: 'Implement drag-and-drop functionality',
-                    description: 'Add smooth drag and drop for task management between columns',
-                    priority: 'high',
-                    dueDate: '2024-01-12',
-                    tags: ['development', 'feature'],
-                    assignee: 'TM',
-                    aiInsight: 'High priority. Blocking other frontend tasks. Estimated: 5 hours.'
-                }
-            ],
-            completed: [
-                {
-                    id: 4,
-                    title: 'Set up project repository',
-                    description: 'Initialize Git repository and set up CI/CD pipeline',
-                    priority: 'low',
-                    dueDate: '2024-01-08',
-                    tags: ['setup', 'devops'],
-                    assignee: 'RJ',
-                    aiInsight: 'Completed ahead of schedule. Good work!'
-                }
-            ]
+            // inprogress: [
+            //     {
+            //         id: 3,
+            //         title: 'Implement drag-and-drop functionality',
+            //         description: 'Add smooth drag and drop for task management between columns',
+            //         priority: 'high',
+            //         dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            //         tags: ['development', 'feature'],
+            //         assignee: 'TM',
+            //         aiInsight: 'High priority. Blocking other frontend tasks. Estimated: 5 hours.'
+            //     }
+            // ],
+            // completed: [
+            //     {
+            //         id: 4,
+            //         title: 'Set up project repository',
+            //         description: 'Initialize Git repository and set up CI/CD pipeline',
+            //         priority: 'low',
+            //         dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            //         tags: ['setup', 'devops'],
+            //         assignee: 'RJ',
+            //         aiInsight: 'Completed ahead of schedule. Good work!'
+            //     }
+            // ]
         };
+
+        // Save tasks to localStorage
+        function saveTasks() {
+            localStorage.setItem('productiva_tasks', JSON.stringify(tasks));
+            updateProductivityData();
+        }
+
+        // FIXED: Update productivity data for sync with other pages
+        function updateProductivityData() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // CORRECTED: Get ALL tasks due today (from all columns)
+            const todayTasks = getAllTasks().filter(task => task.dueDate === today);
+            
+            // CORRECTED: Count completed tasks for today (tasks in completed column with today's due date)
+            const completedToday = tasks.completed.filter(task => task.dueDate === today).length;
+            
+            const productivityScore = todayTasks.length > 0 ? 
+                Math.round((completedToday / todayTasks.length) * 100) : 0;
+            
+            const productivityData = {
+                date: today,
+                score: productivityScore,
+                level: getProductivityLevel(productivityScore),
+                completed: completedToday,
+                total: todayTasks.length
+            };
+            
+            console.log('Productivity Data:', {
+                totalTasksToday: todayTasks.length,
+                completedToday: completedToday,
+                score: productivityScore,
+                todayTasks: todayTasks.map(t => ({ id: t.id, title: t.title, dueDate: t.dueDate })),
+                completedTasks: tasks.completed.filter(t => t.dueDate === today).map(t => ({ id: t.id, title: t.title }))
+            });
+            
+            // Save to localStorage for other pages to access
+            let productivityHistory = JSON.parse(localStorage.getItem('productivity_history')) || {};
+            productivityHistory[today] = productivityData;
+            localStorage.setItem('productivity_history', JSON.stringify(productivityHistory));
+            
+            // Also update current productivity state
+            localStorage.setItem('current_productivity', JSON.stringify(productivityData));
+        }
+
+        function getProductivityLevel(score) {
+            if (score >= 80) return 'HIGH';
+            if (score >= 40) return 'MEDIUM';
+            return 'LOW';
+        }
+
+        function getAllTasks() {
+            return [...tasks.todo, ...tasks.inprogress, ...tasks.completed];
+        }
+
+        // Helper function to get today's date in YYYY-MM-DD format
+        function getTodayDate() {
+            return new Date().toISOString().split('T')[0];
+        }
 
         // DOM Elements
         const addTaskBtn = document.getElementById('addTaskBtn');
@@ -966,8 +1025,15 @@
 
         // Initialize the board with tasks
         function initializeBoard() {
+            // Set default due date to today when opening modal
+            addTaskBtn.addEventListener('click', () => {
+                document.getElementById('taskDueDate').value = getTodayDate();
+                addTaskModal.classList.add('show');
+            });
+
             renderAllTasks();
             updateProductivityOverview();
+            updateProductivityData(); // Initialize productivity data
         }
 
         // Render all tasks to the DOM
@@ -1004,9 +1070,13 @@
                 day: 'numeric'
             });
 
+            // Check if task is due today
+            const isDueToday = task.dueDate === getTodayDate();
+            const todayBadge = isDueToday ? '<span class="today-badge" style="background: #ff4444; color: white; padding: 2px 6px; border-radius: 8px; font-size: 0.7rem; margin-left: 5px;">Today</span>' : '';
+
             taskCard.innerHTML = `
                 <div class="task-header">
-                    <div class="task-title">${task.title}</div>
+                    <div class="task-title">${task.title} ${todayBadge}</div>
                     <div class="task-actions">
                         <button class="task-action-btn ai-insight-btn" title="AI Insight">
                             <i class="fas fa-lightbulb"></i>
@@ -1143,6 +1213,9 @@
                         // Move task between columns
                         tasks[sourceColumn].splice(taskIndex, 1);
                         tasks[targetColumn].push(task);
+
+                        // Save to localStorage
+                        saveTasks();
 
                         // Update the DOM
                         const tasksContainer = this.querySelector('.tasks-container');
@@ -1281,6 +1354,9 @@
             // Add to data model
             tasks.todo.push(newTask);
 
+            // Save to localStorage
+            saveTasks();
+
             // Add to DOM
             const todoTasks = document.getElementById('todo-tasks');
             todoTasks.appendChild(createTaskCard(newTask, 'todo'));
@@ -1324,6 +1400,9 @@
             const taskIndex = tasks[column].findIndex(task => task.id == taskId);
             if (taskIndex !== -1) {
                 tasks[column].splice(taskIndex, 1);
+
+                // Save to localStorage
+                saveTasks();
 
                 // Remove from DOM
                 const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
@@ -1410,9 +1489,6 @@
                 }
             });
         }
-
-
-
     </script>
 </body>
 
