@@ -22,11 +22,11 @@
         <div class="attendance-actions">
             <button class="btn btn-success attendance-btn" id="loginBtn" data-action="login">
                 <i class="fas fa-sign-in-alt"></i>
-                Log In
+                Punch In
             </button>
             <button class="btn btn-warning attendance-btn" id="logoutBtn" data-action="logout">
                 <i class="fas fa-sign-out-alt"></i>
-                Log Out
+                Punch Out
             </button>
         </div>
 
@@ -753,6 +753,109 @@
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
+
+    .calendar-row {
+        display: flex;
+        gap: 25px;
+        overflow-x: auto;
+        padding-bottom: 10px;
+    }
+
+    .month-container {
+        min-width: 220px;
+    }
+
+    .month-title {
+        text-align: center;
+        font-weight: 600;
+        color: #58a6ff;
+        margin-bottom: 10px;
+    }
+
+    .weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        color: #888;
+        font-size: 11px;
+        margin-bottom: 5px;
+    }
+
+    .days-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+    }
+
+    .day-cell {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: transform .2s;
+    }
+
+    .day-cell:hover {
+        transform: scale(1.25);
+        z-index: 10;
+    }
+
+    /* TODAY highlight */
+    .day-cell.today {
+        outline: 2px solid #00eaff;
+        box-shadow: 0 0 6px #00eaff;
+    }
+
+    /* ATTENDANCE COLORS */
+    .present {
+        background: #2f81f7;
+    }
+
+    .present-2 {
+        background: #5b9fff;
+    }
+
+    .present-1 {
+        background: #9fc8ff;
+    }
+
+    .half-day {
+        background: #184a8f;
+    }
+
+    .absent {
+        background: #111;
+    }
+
+    .weekend {
+        background: #333;
+    }
+
+    .empty {
+        background: transparent;
+    }
+
+    /* Legend */
+    .calendar-legend {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .color-box {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+    }
+
 
     /* Responsive Design */
     @media (max-width: 768px) {

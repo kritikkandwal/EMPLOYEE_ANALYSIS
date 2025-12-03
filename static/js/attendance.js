@@ -36,12 +36,12 @@ class AttendancePredictions {
             box.innerHTML = "";
             (p.weekly_trend || []).forEach(d => {
                 box.innerHTML += `
-                    <div class="day-prediction">
-                        <div class="day-name">${d.day || ""}</div>
-                        <div class="day-probability">${d.probability ?? 0}%</div>
-                        <div class="day-date">${(d.date || "").split("-").pop()}</div>
-                    </div>
-                `;
+                        <div class="day-prediction">
+                            <div class="day-name">${d.day || ""}</div>
+                            <div class="day-probability">${d.probability ?? 0}%</div>
+                            <div class="day-date">${(d.date || "").split("-").pop()}</div>
+                        </div>
+                    `;
             });
 
             const avgEl = document.getElementById("weeklyAvg");
@@ -149,28 +149,28 @@ class AttendanceManager {
             const i = data.insights;
 
             document.getElementById("predictionsContent").innerHTML = `
-                <div class="prediction-item">
-                    <div class="prediction-icon"><i class="fas fa-chart-line"></i></div>
-                    <div class="prediction-content">
-                        <h4>Attendance Accuracy</h4>
-                        <p>${i.predicted_attendance_rate}% expected attendance</p>
+                    <div class="prediction-item">
+                        <div class="prediction-icon"><i class="fas fa-chart-line"></i></div>
+                        <div class="prediction-content">
+                            <h4>Attendance Accuracy</h4>
+                            <p>${i.predicted_attendance_rate}% expected attendance</p>
+                        </div>
                     </div>
-                </div>
-                <div class="prediction-item">
-                    <div class="prediction-icon"><i class="fas fa-brain"></i></div>
-                    <div class="prediction-content">
-                        <h4>Confidence Level</h4>
-                        <p>${(i.confidence_score * 100).toFixed(0)}% model confidence</p>
+                    <div class="prediction-item">
+                        <div class="prediction-icon"><i class="fas fa-brain"></i></div>
+                        <div class="prediction-content">
+                            <h4>Confidence Level</h4>
+                            <p>${(i.confidence_score * 100).toFixed(0)}% model confidence</p>
+                        </div>
                     </div>
-                </div>
-                <div class="prediction-item">
-                    <div class="prediction-icon"><i class="fas fa-lightbulb"></i></div>
-                    <div class="prediction-content">
-                        <h4>AI Recommendations</h4>
-                        <p>${i.recommended_improvements[0]}</p>
+                    <div class="prediction-item">
+                        <div class="prediction-icon"><i class="fas fa-lightbulb"></i></div>
+                        <div class="prediction-content">
+                            <h4>AI Recommendations</h4>
+                            <p>${i.recommended_improvements[0]}</p>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
         } catch (error) {
             console.error("Insights error:", error);
             document.getElementById("predictionsContent").innerHTML =
@@ -230,12 +230,12 @@ class AttendanceManager {
 
             if (!data.logged_in) {
                 todayStatus.innerHTML = `
-                    <div class="status-card status-absent">
-                        <div class="status-icon">❌</div>
-                        <div class="status-message">Not Logged In Today</div>
-                        <div class="status-details">Click "Log In" to start tracking</div>
-                    </div>
-                `;
+                        <div class="status-card status-absent">
+                            <div class="status-icon">❌</div>
+                            <div class="status-message">Not Logged In Today</div>
+                            <div class="status-details">Click "Log In" to start tracking</div>
+                        </div>
+                    `;
             } else {
                 const s = data.status || 'present';
                 const cls =
@@ -249,12 +249,12 @@ class AttendanceManager {
                             '❌';
 
                 todayStatus.innerHTML = `
-                    <div class="status-card ${cls}">
-                        <div class="status-icon">${icon}</div>
-                        <div class="status-message">${s.toUpperCase()}</div>
-                        <div class="status-details">Hours: ${data.total_hours}</div>
-                    </div>
-                `;
+                        <div class="status-card ${cls}">
+                            <div class="status-icon">${icon}</div>
+                            <div class="status-message">${s.toUpperCase()}</div>
+                            <div class="status-details">Hours: ${data.total_hours}</div>
+                        </div>
+                    `;
             }
 
         } catch (err) {
@@ -265,8 +265,8 @@ class AttendanceManager {
 
 
     /* ===================================================================
-       GITHUB YEAR HEATMAP
-       =================================================================== */
+    GITHUB YEAR HEATMAP
+    =================================================================== */
     async loadYearHeatmap() {
         try {
             const today = new Date();
@@ -286,157 +286,287 @@ class AttendanceManager {
 
             const weekCount = 52;
             container.style.setProperty("--week-count", weekCount);
+            // ---------------- NEW MONTHLY GRID HEATMAP (FIXED) ----------------
 
-            let html = `<div class="year-heatmap-wrapper">`;
+            container.innerHTML = "";
 
-            html += `<div class="heatmap-month-row">`;
-            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const currentYear = today.getFullYear();
+            const calendarRow = document.createElement("div");
+            calendarRow.className = "calendar-row";
+            container.appendChild(calendarRow);
 
-            let prevMonth = null;
-            for (let w = 0; w < weekCount; w++) {
-                const date = new Date(startDate);
-                date.setDate(startDate.getDate() + w * 7);
-                const m = date.getMonth();
-                const label = (date.getDate() <= 7 && m !== prevMonth) ? monthNames[m] : "";
-                html += `<div class="month-label">${label}</div>`;
-                prevMonth = m;
-            }
-            html += `</div>`;
+            for (let month = 0; month < 12; month++) {
+                const monthContainer = document.createElement("div");
+                monthContainer.className = "month-container";
 
-            html += `<div style="display:flex;align-items:flex-start;">
-                    <div class="heatmap-left-labels">
-                        <div>Sun</div><div>Mon</div><div>Tue</div>
-                        <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-                    </div>
-                    <div class="year-heatmap">`;
+                const monthTitle = document.createElement("div");
+                monthTitle.className = "month-title";
+                monthTitle.textContent = new Date(currentYear, month)
+                    .toLocaleString("default", { month: "short" });
 
-            let currentMonthIndex = -1;
-            let monthHTML = "";
+                monthContainer.appendChild(monthTitle);
 
-            for (let w = 0; w < weekCount; w++) {
-                const date = new Date(startDate);
-                date.setDate(startDate.getDate() + w * 7);
+                // Weekday headings
+                const weekdaysRow = document.createElement("div");
+                weekdaysRow.className = "weekdays";
+                ["S", "M", "T", "W", "T", "F", "S"].forEach(d => {
+                    const label = document.createElement("div");
+                    label.className = "weekday";
+                    label.textContent = d;
+                    weekdaysRow.appendChild(label);
+                });
+                monthContainer.appendChild(weekdaysRow);
 
-                const m = date.getMonth();
+                // Month grid
+                const grid = document.createElement("div");
+                grid.className = "days-grid";
 
-                if (m !== currentMonthIndex) {
-                    if (currentMonthIndex !== -1)
-                        html += `<div class="month-block">${monthHTML}</div>`;
-                    monthHTML = "";
-                    currentMonthIndex = m;
+                const firstDay = new Date(currentYear, month, 1);
+                const totalDays = new Date(currentYear, month + 1, 0).getDate();
+                const startOffset = firstDay.getDay();
+
+                // Empty before first day
+                for (let i = 0; i < startOffset; i++) {
+                    const empty = document.createElement("div");
+                    empty.className = "day-cell empty";
+                    grid.appendChild(empty);
                 }
 
-                let weekCol = `<div class="week-column">`;
+                // Attendance cells
+                for (let d = 1; d <= totalDays; d++) {
+                    const dateObj = new Date(currentYear, month, d);
+                    const iso = dateObj.toISOString().slice(0, 10);
 
-                for (let d = 0; d < 7; d++) {
-                    const cellDate = new Date(startDate);
-                    cellDate.setDate(startDate.getDate() + w * 7 + d);
+                    const cell = document.createElement("div");
+                    cell.className = "day-cell";
 
-                    const iso = cellDate.toISOString().slice(0, 10);
                     const entry = recMap[iso];
-                    const isWeekend = cellDate.getDay() >= 5;
+                    const isWeekend = dateObj.getDay() >= 5;
 
                     let cls = "absent";
+
                     if (entry) {
                         if (entry.status === "present") {
                             const h = Number(entry.hours_worked);
                             if (h >= 8) cls = "present";
                             else if (h >= 6) cls = "present-2";
                             else cls = "present-1";
-                        } else if (entry.status === "half-day") cls = "half-day";
-                        else cls = "absent";
-                    } else if (isWeekend) cls = "weekend";
+                        } else if (entry.status === "half-day") {
+                            cls = "half-day";
+                        }
+                    } else if (isWeekend) {
+                        cls = "weekend";
+                    }
 
-                    const todayStr = new Date().toISOString().slice(0, 10);
-                    if (iso === todayStr) cls += " today";
+                    if (iso === today.toISOString().slice(0, 10)) {
+                        cell.classList.add("today");
+                    }
 
-                    weekCol += `<div class="heat-day ${cls}" title="${iso}"></div>`;
+                    cell.classList.add(cls);
+                    cell.title = `${iso} — ${entry ? entry.status : "No Data"}`;
+
+                    grid.appendChild(cell);
                 }
 
-                weekCol += `</div>`;
-                monthHTML += weekCol;
-            }
+                monthContainer.appendChild(grid);
+                calendarRow.appendChild(monthContainer);
+                // ------------------ ENABLE MONTH CLICK ------------------ //
+                monthContainer.dataset.year = currentYear;
+                monthContainer.dataset.month = (month + 1); // numeric
 
-            html += `<div class="month-block">${monthHTML}</div>`;
 
-            html += `</div></div></div>`;
-            container.innerHTML = html;
+                monthContainer.addEventListener("click", () => {
+                    // highlight
+                    document.querySelectorAll(".month-container")
+                        .forEach(m => m.classList.remove("month-selected"));
+                    monthContainer.classList.add("month-selected");
 
-            /* ===========================================================
-   ADDING MONTH BLOCK HANDLERS (NO NAMING CONFLICTS)
-   =========================================================== */
-
-            const monthBlocks = container.querySelectorAll('.month-block');
-
-            // Recompute first-week start date safely (unique var names)
-            const hmToday = new Date();
-            const hmEndDate = new Date(hmToday.getFullYear(), hmToday.getMonth(), hmToday.getDate());
-            const hmStartDate = new Date(hmEndDate);
-            hmStartDate.setDate(hmEndDate.getDate() - 364);
-
-            const hmDow = hmStartDate.getDay();
-            if (hmDow !== 0) hmStartDate.setDate(hmStartDate.getDate() - hmDow);
-
-            // Walk through months & assign year/month attributes
-            let hmCursor = new Date(hmStartDate);
-            let hmIndex = 0;
-
-            while (hmIndex < monthBlocks.length) {
-                const block = monthBlocks[hmIndex];
-                if (!block) break;
-
-                const Y = hmCursor.getFullYear();
-                const M = hmCursor.getMonth() + 1;
-
-                block.dataset.year = String(Y);
-                block.dataset.month = String(M).padStart(2, "0");
-
-                // click event
-                block.addEventListener("click", () => {
-                    document.querySelectorAll('.month-block').forEach(b => b.classList.remove('month-selected'));
-                    block.classList.add('month-selected');
-                    this.loadMonthlyStats(Y, M);
+                    // load stats using dataset (CORRECT)
+                    this.loadMonthlyStats(
+                        Number(monthContainer.dataset.year),
+                        Number(monthContainer.dataset.month)
+                    );
                 });
 
-                // Move to next month (week-by-week)
-                const curM = hmCursor.getMonth();
-                do {
-                    hmCursor.setDate(hmCursor.getDate() + 7);
-                } while (hmCursor.getMonth() === curM && hmCursor < hmEndDate);
-
-                hmIndex++;
             }
 
-            // Default: select current month
-            const curYear = (new Date()).getFullYear();
-            const curMonth = (new Date()).getMonth() + 1;
-
-            const defaultBlock = Array.from(monthBlocks)
-                .find(b => b.dataset.year == String(curYear) && Number(b.dataset.month) === curMonth);
-
-            if (defaultBlock) defaultBlock.classList.add("month-selected");
-
-            // Load stats for default current month
-            this.loadMonthlyStats(curYear, curMonth);
-
-            /* ===========================================================
-               END OF ADDED BLOCK
-               =========================================================== */
 
 
-            const legend = document.createElement("div");
-            legend.className = "heatmap-legend";
-            legend.innerHTML = `
-            <div><strong>Legend</strong></div>
-            <div class="box" style="background:#2f81f7"></div> Present (8h+)
-            <div class="box" style="background:#5b9fff"></div> Present (6–8h)
-            <div class="box" style="background:#9fc8ff"></div> Present (0–6h)
-            <div class="box" style="background:#184a8f"></div> Half-day
-            <div class="box" style="background:#111"></div> Absent
-            <div class="box" style="background:#1a1a1a"></div> Weekend`;
-            container.appendChild(legend);
 
-            this._attachHeatmapHover();
+
+            // LEGEND
+            const legend = `
+    <div class="calendar-legend">
+        <div class="legend-item"><div class="color-box present"></div> Present (8h+)</div>
+        <div class="legend-item"><div class="color-box present-2"></div> Present (6–8h)</div>
+        <div class="legend-item"><div class="color-box present-1"></div> Present (0–6h)</div>
+        <div class="legend-item"><div class="color-box half-day"></div> Half-day</div>
+        <div class="legend-item"><div class="color-box absent"></div> Absent</div>
+        <div class="legend-item"><div class="color-box weekend"></div> Weekend</div>
+    </div>`;
+            // ---------------- AFTER for-loop ---------------- //
+            const currentMonth = today.getMonth();
+            const allMonths = container.querySelectorAll(".month-container");
+
+            if (allMonths[currentMonth]) {
+                allMonths[currentMonth].classList.add("month-selected");
+                this.loadMonthlyStats(currentYear, currentMonth + 1);
+            }
+
+            container.insertAdjacentHTML("beforeend", legend);
+
+
+            //             let html = `<div class="year-heatmap-wrapper">`;
+
+            //             html += `<div class="heatmap-month-row">`;
+            //             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            //             let prevMonth = null;
+            //             for (let w = 0; w < weekCount; w++) {
+            //                 const date = new Date(startDate);
+            //                 date.setDate(startDate.getDate() + w * 7);
+            //                 const m = date.getMonth();
+            //                 const label = (date.getDate() <= 7 && m !== prevMonth) ? monthNames[m] : "";
+            //                 html += `<div class="month-label">${label}</div>`;
+            //                 prevMonth = m;
+            //             }
+            //             html += `</div>`;
+
+            //             html += `<div style="display:flex;align-items:flex-start;">
+            //                     <div class="heatmap-left-labels">
+            //                         <div>Sun</div><div>Mon</div><div>Tue</div>
+            //                         <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            //                     </div>
+            //                     <div class="year-heatmap">`;
+
+            //             let currentMonthIndex = -1;
+            //             let monthHTML = "";
+
+            //             for (let w = 0; w < weekCount; w++) {
+            //                 const date = new Date(startDate);
+            //                 date.setDate(startDate.getDate() + w * 7);
+
+            //                 const m = date.getMonth();
+
+            //                 if (m !== currentMonthIndex) {
+            //                     if (currentMonthIndex !== -1)
+            //                         html += `<div class="month-block">${monthHTML}</div>`;
+            //                     monthHTML = "";
+            //                     currentMonthIndex = m;
+            //                 }
+
+            //                 let weekCol = `<div class="week-column">`;
+
+            //                 for (let d = 0; d < 7; d++) {
+            //                     const cellDate = new Date(startDate);
+            //                     cellDate.setDate(startDate.getDate() + w * 7 + d);
+
+            //                     const iso = cellDate.toISOString().slice(0, 10);
+            //                     const entry = recMap[iso];
+            //                     const isWeekend = cellDate.getDay() >= 5;
+
+            //                     let cls = "absent";
+            //                     if (entry) {
+            //                         if (entry.status === "present") {
+            //                             const h = Number(entry.hours_worked);
+            //                             if (h >= 8) cls = "present";
+            //                             else if (h >= 6) cls = "present-2";
+            //                             else cls = "present-1";
+            //                         } else if (entry.status === "half-day") cls = "half-day";
+            //                         else cls = "absent";
+            //                     } else if (isWeekend) cls = "weekend";
+
+            //                     const todayStr = new Date().toISOString().slice(0, 10);
+            //                     if (iso === todayStr) cls += " today";
+
+            //                     weekCol += `<div class="heat-day ${cls}" title="${iso}"></div>`;
+            //                 }
+
+            //                 weekCol += `</div>`;
+            //                 monthHTML += weekCol;
+            //             }
+
+            //             html += `<div class="month-block">${monthHTML}</div>`;
+
+
+            //             html += `</div></div></div>`;
+            //             container.innerHTML = html;
+
+            //             /* ===========================================================
+            //    ADDING MONTH BLOCK HANDLERS (NO NAMING CONFLICTS)
+            //    =========================================================== */
+
+            //             const monthBlocks = container.querySelectorAll('.month-block');
+
+            //             // Recompute first-week start date safely (unique var names)
+            //             const hmToday = new Date();
+            //             const hmEndDate = new Date(hmToday.getFullYear(), hmToday.getMonth(), hmToday.getDate());
+            //             const hmStartDate = new Date(hmEndDate);
+            //             hmStartDate.setDate(hmEndDate.getDate() - 364);
+
+            //             const hmDow = hmStartDate.getDay();
+            //             if (hmDow !== 0) hmStartDate.setDate(hmStartDate.getDate() - hmDow);
+
+            //             // Walk through months & assign year/month attributes
+            //             let hmCursor = new Date(hmStartDate);
+            //             let hmIndex = 0;
+
+            //             while (hmIndex < monthBlocks.length) {
+            //                 const block = monthBlocks[hmIndex];
+            //                 if (!block) break;
+
+            //                 const Y = hmCursor.getFullYear();
+            //                 const M = hmCursor.getMonth() + 1;
+
+            //                 block.dataset.year = String(Y);
+            //                 block.dataset.month = String(M).padStart(2, "0");
+
+            //                 // click event
+            //                 block.addEventListener("click", () => {
+            //                     document.querySelectorAll('.month-block').forEach(b => b.classList.remove('month-selected'));
+            //                     block.classList.add('month-selected');
+            //                     this.loadMonthlyStats(Y, M);
+            //                 });
+
+            //                 // Move to next month (week-by-week)
+            //                 const curM = hmCursor.getMonth();
+            //                 do {
+            //                     hmCursor.setDate(hmCursor.getDate() + 7);
+            //                 } while (hmCursor.getMonth() === curM && hmCursor < hmEndDate);
+
+            //                 hmIndex++;
+            //             }
+
+            //             // Default: select current month
+            //             const curYear = (new Date()).getFullYear();
+            //             const curMonth = (new Date()).getMonth() + 1;
+
+            //             const defaultBlock = Array.from(monthBlocks)
+            //                 .find(b => b.dataset.year == String(curYear) && Number(b.dataset.month) === curMonth);
+
+            //             if (defaultBlock) defaultBlock.classList.add("month-selected");
+
+            //             // Load stats for default current month
+            //             this.loadMonthlyStats(curYear, curMonth);
+
+            //             /* ===========================================================
+            //                END OF ADDED BLOCK
+            //                =========================================================== */
+
+
+            //             const legend = document.createElement("div");
+            //             legend.className = "heatmap-legend";
+            //             legend.innerHTML = `
+            //             <div><strong>Legend</strong></div>
+            //             <div class="box" style="background:#2f81f7"></div> Present (8h+)
+            //             <div class="box" style="background:#5b9fff"></div> Present (6–8h)
+            //             <div class="box" style="background:#9fc8ff"></div> Present (0–6h)
+            //             <div class="box" style="background:#184a8f"></div> Half-day
+            //             <div class="box" style="background:#111"></div> Absent
+            //             <div class="box" style="background:#1a1a1a"></div> Weekend`;
+            //             container.appendChild(legend);
+
+            //             this._attachHeatmapHover();
 
         } catch (err) {
             console.error("Year heatmap error:", err);
@@ -567,6 +697,8 @@ class AttendanceManager {
         }
     }
 
+
+
     renderPredictions() {
         const p = this.predictions;
         if (!p) return;
@@ -582,11 +714,11 @@ class AttendanceManager {
             grid.innerHTML = "";
             (p.weekly_trend || []).forEach(d => {
                 grid.innerHTML += `
-                    <div class="day-prediction">
-                        <div class="day-name">${d.day}</div>
-                        <div class="day-probability">${d.probability}%</div>
-                    </div>
-                `;
+                        <div class="day-prediction">
+                            <div class="day-name">${d.day}</div>
+                            <div class="day-probability">${d.probability}%</div>
+                        </div>
+                    `;
             });
         }
 
