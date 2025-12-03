@@ -115,28 +115,42 @@ class AttendancePredictor:
         }
     
     def calculate_streak_forecast(self, df, tomorrow_pred):
-        """Calculate streak forecast based on predictions"""
-        # Get current streak
-        recent_attendance = df['attendance'].tail(7).values
+        """
+        REAL streak forecasting:
+        - current_streak = count of consecutive present days
+        - tomorrow_pred = ML probability of being present tomorrow (0–1)
+        - probability_continue = tomorrow_pred * 100
+        - expected_end_in = geometric model (probability-driven)
+        """
+        # Extract last 14 days (better streak window)
+        recent = df['attendance'].tail(14).values
+    
+        # Calculate REAL current streak
         current_streak = 0
-        
-        for att in reversed(recent_attendance):
-            if att == 1:
+        for a in reversed(recent):
+            if a == 1:
                 current_streak += 1
             else:
                 break
-        
-        # Predict streak continuation
-        if tomorrow_pred > 0.8:
-            if current_streak >= 5:
-                return "Excellent - Likely to continue"
-            else:
-                return "Strong - Good chance to continue"
-        elif tomorrow_pred > 0.6:
-            return "Moderate - Might continue"
-        else:
-            return "Weak - May break soon"
+            
+        # Probability of continuing streak
+        probability_continue = round(float(tomorrow_pred) * 100, 1)
     
+        # Expected continuation (Geometric expectation)
+        # formula: E = p / (1 - p)
+        p = float(tomorrow_pred)
+        if p >= 0.99:
+            expected_more_days = 10
+        else:
+            expected_more_days = round(p / (1 - p), 1)
+    
+        return {
+            "current_streak": current_streak,
+            "probability_continue": probability_continue,
+            "expected_end_in": expected_more_days
+        }
+
+
     def calculate_absence_likelihood(self, lr_pred, lstm_pred, prophet_pred):
         """Calculate absence likelihood from all predictions"""
         avg_pred = (lr_pred + lstm_pred + prophet_pred) / 3

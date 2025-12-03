@@ -4,6 +4,8 @@ from prophet import Prophet
 import joblib
 import os
 from datetime import datetime, timedelta
+import matplotlib
+matplotlib.use("Agg")        # <-- FIX: prevents Tkinter crash
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO

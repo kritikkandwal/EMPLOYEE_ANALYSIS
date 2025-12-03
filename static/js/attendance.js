@@ -1,10 +1,7 @@
 // static/js/attendance.js
-// Cleaned single file to manage attendance UI, calendar, and ML predictions
+// Cleaned file to manage attendance UI, calendar, and ML predictions (NO MOCK DATA)
 
 class AttendancePredictions {
-
-
-
     async load() {
         try {
             const res = await fetch("/api/attendance/predictions");
@@ -87,60 +84,9 @@ class AttendanceManager {
         this.init();
     }
 
-    _generateRandomAttendanceMap(startDate, endDate) {
-        const map = {};
-        const cursor = new Date(startDate);
-
-        while (cursor <= endDate) {
-            const iso = cursor.toISOString().slice(0, 10);
-
-            // skip today
-            const todayISO = new Date().toISOString().slice(0, 10);
-            if (iso === todayISO) {
-                cursor.setDate(cursor.getDate() + 1);
-                continue;
-            }
-
-            // skip future
-            if (cursor > new Date()) break;
-
-            // random status
-            const rnd = Math.random();
-            let status = "absent";
-            let hours = 0;
-
-            if (rnd > 0.7) {                // 30%
-                status = "present";
-                hours = Math.floor(6 + Math.random() * 3);  // 6–9 hrs
-            }
-            else if (rnd > 0.5) {           // 20%
-                status = "half-day";
-                hours = Math.floor(3 + Math.random() * 2);  // 3–5 hrs
-            }
-            else {                          // 50%
-                status = "absent";
-                hours = 0;
-            }
-
-            map[iso] = {
-                date: iso,
-                status: status,
-                hours_worked: hours
-            };
-
-            cursor.setDate(cursor.getDate() + 1);
-        }
-        return map;
-    }
-
-
-
     init() {
         this.loadCurrentStatus();
-
-        // ✔ REPLACED MONTHLY CALENDAR WITH YEAR HEATMAP
         this.loadYearHeatmap();
-
         this.loadPredictions();
         this.loadInsights();
         this.setupEventListeners();
@@ -270,21 +216,16 @@ class AttendanceManager {
             const res = await fetch('/api/attendance/current-status');
             const data = await res.json();
 
-            // --- IMPORTANT CHANGE: use monthly aggregates returned by the backend ---
-            // Use the monthly aggregated fields (present_days_month, attendance_rate_month, total_hours_month, current_streak_month)
-            // These are computed server-side by combining DB rows and random-generated past days.
             const presentMonth = data.present_days_month ?? 0;
             const attendanceRateMonth = (data.attendance_rate_month ?? 0) + "%";
             const totalHoursMonth = data.total_hours_month ?? 0;
             const currentStreakMonth = data.current_streak_month ?? 0;
 
-            // Update UI with monthly aggregated stats
             document.getElementById('presentDays').textContent = presentMonth;
             document.getElementById('attendanceRate').textContent = attendanceRateMonth;
             document.getElementById('totalHours').textContent = totalHoursMonth;
             document.getElementById('currentStreak').textContent = currentStreakMonth;
 
-            // Keep the today's status card identical to previous behaviour:
             const todayStatus = document.getElementById('todayStatus');
 
             if (!data.logged_in) {
@@ -324,7 +265,7 @@ class AttendanceManager {
 
 
     /* ===================================================================
-       🔵 GITHUB YEAR HEATMAP (REPLACES loadCalendar)
+       GITHUB YEAR HEATMAP
        =================================================================== */
     async loadYearHeatmap() {
         try {
@@ -340,22 +281,12 @@ class AttendanceManager {
             const monthData = await this._fetchMonthlyData(monthRequests);
             let recMap = this._buildDateMapFromMonths(monthData);
 
-            // If no attendance data → fill with random values
-            const hasAnyData = Object.keys(recMap).length > 0;
-
-            if (!hasAnyData) {
-                console.warn("⚠ No attendance data found. Generating random history...");
-                recMap = this._generateRandomAttendanceMap(startDate, endDate);
-            }
-
-
             const container = document.getElementById("attendanceCalendar");
             if (!container) return;
 
             const weekCount = 52;
             container.style.setProperty("--week-count", weekCount);
 
-            // ---- BUILD MONTH LABELS ----
             let html = `<div class="year-heatmap-wrapper">`;
 
             html += `<div class="heatmap-month-row">`;
@@ -372,7 +303,6 @@ class AttendanceManager {
             }
             html += `</div>`;
 
-            // ---- MAIN HEATMAP ----
             html += `<div style="display:flex;align-items:flex-start;">
                     <div class="heatmap-left-labels">
                         <div>Sun</div><div>Mon</div><div>Tue</div>
@@ -380,7 +310,6 @@ class AttendanceManager {
                     </div>
                     <div class="year-heatmap">`;
 
-            // Build month blocks
             let currentMonthIndex = -1;
             let monthHTML = "";
 
@@ -390,7 +319,6 @@ class AttendanceManager {
 
                 const m = date.getMonth();
 
-                // Month change → push block
                 if (m !== currentMonthIndex) {
                     if (currentMonthIndex !== -1)
                         html += `<div class="month-block">${monthHTML}</div>`;
@@ -398,7 +326,6 @@ class AttendanceManager {
                     currentMonthIndex = m;
                 }
 
-                // Build one week column
                 let weekCol = `<div class="week-column">`;
 
                 for (let d = 0; d < 7; d++) {
@@ -430,13 +357,73 @@ class AttendanceManager {
                 monthHTML += weekCol;
             }
 
-            // Push last month block
             html += `<div class="month-block">${monthHTML}</div>`;
 
             html += `</div></div></div>`;
             container.innerHTML = html;
 
-            // Legend
+            /* ===========================================================
+   ADDING MONTH BLOCK HANDLERS (NO NAMING CONFLICTS)
+   =========================================================== */
+
+            const monthBlocks = container.querySelectorAll('.month-block');
+
+            // Recompute first-week start date safely (unique var names)
+            const hmToday = new Date();
+            const hmEndDate = new Date(hmToday.getFullYear(), hmToday.getMonth(), hmToday.getDate());
+            const hmStartDate = new Date(hmEndDate);
+            hmStartDate.setDate(hmEndDate.getDate() - 364);
+
+            const hmDow = hmStartDate.getDay();
+            if (hmDow !== 0) hmStartDate.setDate(hmStartDate.getDate() - hmDow);
+
+            // Walk through months & assign year/month attributes
+            let hmCursor = new Date(hmStartDate);
+            let hmIndex = 0;
+
+            while (hmIndex < monthBlocks.length) {
+                const block = monthBlocks[hmIndex];
+                if (!block) break;
+
+                const Y = hmCursor.getFullYear();
+                const M = hmCursor.getMonth() + 1;
+
+                block.dataset.year = String(Y);
+                block.dataset.month = String(M).padStart(2, "0");
+
+                // click event
+                block.addEventListener("click", () => {
+                    document.querySelectorAll('.month-block').forEach(b => b.classList.remove('month-selected'));
+                    block.classList.add('month-selected');
+                    this.loadMonthlyStats(Y, M);
+                });
+
+                // Move to next month (week-by-week)
+                const curM = hmCursor.getMonth();
+                do {
+                    hmCursor.setDate(hmCursor.getDate() + 7);
+                } while (hmCursor.getMonth() === curM && hmCursor < hmEndDate);
+
+                hmIndex++;
+            }
+
+            // Default: select current month
+            const curYear = (new Date()).getFullYear();
+            const curMonth = (new Date()).getMonth() + 1;
+
+            const defaultBlock = Array.from(monthBlocks)
+                .find(b => b.dataset.year == String(curYear) && Number(b.dataset.month) === curMonth);
+
+            if (defaultBlock) defaultBlock.classList.add("month-selected");
+
+            // Load stats for default current month
+            this.loadMonthlyStats(curYear, curMonth);
+
+            /* ===========================================================
+               END OF ADDED BLOCK
+               =========================================================== */
+
+
             const legend = document.createElement("div");
             legend.className = "heatmap-legend";
             legend.innerHTML = `
@@ -519,6 +506,46 @@ class AttendanceManager {
             node.addEventListener('mouseleave', () => tooltip.style.display = 'none');
         });
     }
+
+    async loadMonthlyStats(year, month) {
+        try {
+            // Reuse the API you already use for the heatmap
+            const res = await fetch(`/api/attendance/monthly?year=${year}&month=${month}`);
+            const data = await res.json();
+
+            if (!data.success) return;
+
+            const records = data.records || [];
+
+            // Compute stats on frontend
+            let present = 0;
+            let hours = 0;
+
+            const working = records.filter(r => !r.is_weekend);
+
+            working.forEach(r => {
+                if (r.status === "present") present++;
+                hours += r.hours_worked;
+            });
+
+            const attendanceRate = working.length
+                ? Math.round((present / working.length) * 100)
+                : 0;
+
+            // update UI (Monthly Statistics ONLY)
+            document.getElementById('presentDays').textContent = present;
+            document.getElementById('attendanceRate').textContent = attendanceRate + "%";
+            document.getElementById('totalHours').textContent = hours.toFixed(2);
+
+            // ❗ DO NOT TOUCH STREAK HERE (Backend & Predictions handle it)
+            // So we DO NOT calculate OR overwrite streak anymore
+
+        } catch (err) {
+            console.error("Monthly Stats Error:", err);
+        }
+    }
+
+
 
 
 
@@ -605,6 +632,8 @@ class AttendanceManager {
 
 
 
+/* -------------------------- GLOBALS -------------------------- */
+
 async function refreshPredictions() {
     await window.attendanceManager.loadPredictions();
     window.attendanceManager.showNotification("Predictions refreshed", "success");
@@ -626,138 +655,9 @@ async function trainModels() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Tab switching functionality
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const tabPanes = document.querySelectorAll('.tab-pane');
-    
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // Remove active class from all buttons and panes
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabPanes.forEach(pane => pane.classList.remove('active'));
-            
-            // Add active class to clicked button
-            button.classList.add('active');
-            
-            // Show corresponding tab pane
-            const tabId = button.getAttribute('data-tab');
-            document.getElementById(`${tabId}-tab`).classList.add('active');
-        });
-    });
-    
-    // Mock data population for demonstration
-    populateMockData();
-});
-
-function populateMockData() {
-    // Tomorrow tab
-    document.getElementById('tomorrowProbability').textContent = '87%';
-    document.getElementById('confidenceLevel').textContent = 'High Confidence';
-    document.getElementById('expectedHours').textContent = '8.2 hours';
-    document.getElementById('modelUsed').textContent = 'XGBoost v2.1';
-    
-    // Weekly tab
-    document.getElementById('weeklyAvg').textContent = '78%';
-    
-    const daysGrid = document.getElementById('weeklyDaysGrid');
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const dates = ['15', '16', '17', '18', '19', '20', '21'];
-    const probabilities = ['85%', '90%', '45%', '92%', '88%', '15%', '10%'];
-    
-    daysGrid.innerHTML = '';
-    days.forEach((day, index) => {
-        daysGrid.innerHTML += `
-            <div class="day-prediction">
-                <div class="day-name">${day}</div>
-                <div class="day-probability">${probabilities[index]}</div>
-                <div class="day-date">${dates[index]}</div>
-            </div>
-        `;
-    });
-    
-    // Streak tab
-    document.getElementById('currentStreak').textContent = '12';
-    document.getElementById('streakProbability').textContent = '92%';
-    document.getElementById('expectedContinuation').textContent = '5';
-    
-    // Absence tab
-    document.getElementById('absenceProbability').textContent = '13%';
-    
-    const riskFactors = document.getElementById('riskFactorsList');
-    riskFactors.innerHTML = `
-        <li>Unusual late logins in past week</li>
-        <li>Lower productivity on Thursdays</li>
-        <li>Approaching project deadline stress</li>
-    `;
-}
-
-function refreshPredictions() {
-    // Show loading state
-    document.querySelectorAll('.tab-pane.active .prediction-score, .tab-pane.active .day-probability').forEach(el => {
-        el.textContent = '...';
-    });
-    
-    // Simulate API call delay
-    setTimeout(() => {
-        populateMockData();
-        // Show success feedback
-        const toast = document.createElement('div');
-        toast.textContent = 'Predictions updated successfully!';
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(30, 30, 50, 0.9);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            z-index: 1000;
-            border-left: 4px solid #4CAF50;
-        `;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            document.body.removeChild(toast);
-        }, 3000);
-    }, 1500);
-}
-
-function trainModels() {
-    // Show loading state
-    const trainBtn = document.querySelector('.ml-actions .btn:nth-child(2)');
-    const originalText = trainBtn.innerHTML;
-    trainBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Training...';
-    trainBtn.disabled = true;
-    
-    // Simulate training process
-    setTimeout(() => {
-        trainBtn.innerHTML = originalText;
-        trainBtn.disabled = false;
-        
-        // Show success feedback
-        const toast = document.createElement('div');
-        toast.textContent = 'Models retrained successfully!';
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(30, 30, 50, 0.9);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            z-index: 1000;
-            border-left: 4px solid #4CAF50;
-        `;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => {
-            document.body.removeChild(toast);
-        }, 3000);
-    }, 3000);
-}
 
 
+/* -------------------------- INIT -------------------------- */
 
 document.addEventListener('DOMContentLoaded', () => {
     window.attendanceAI = new AttendancePredictions();

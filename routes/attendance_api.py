@@ -8,6 +8,10 @@ from sqlalchemy import and_
 from models import db
 from models.attendance import AttendanceLog
 from models.attendance_models.predict_attendance import predictor
+from models.attendance_models.attendance_cache import (
+    load_cache, save_cache, set_day, get_day, ensure_history_exists
+)
+
 
 attendance_api_bp = Blueprint("attendance_api", __name__)
 
@@ -71,14 +75,34 @@ def _build_calendar_for_month(year, month, logs):
 
     return weeks
 
+@attendance_api_bp.route("/monthly-stats")
+@login_required
+def monthly_stats():
+    try:
+        year = int(request.args.get("year"))
+        month = int(request.args.get("month"))
+
+        records = _get_month_records(current_user.id, year, month)
+        stats = _compute_stats_from_records(records)
+
+        return jsonify({
+            "success": True,
+            "stats": stats
+        })
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 
 def _compute_stats_from_records(records):
     """
     Compute present days, total hours, attendance rate, and current streak
-    given a list of daily records for days that were considered (typically
-    days up to today).
+    given a list of daily records (records must be sorted ascending by date).
+    Attendance rate is calculated over WORKING DAYS (exclude weekends).
     """
-    # Only consider records that are not future placeholders
     if not records:
         return {
             "present_days": 0,
@@ -87,18 +111,24 @@ def _compute_stats_from_records(records):
             "current_streak": 0
         }
 
-    # Only count days that are actual days (we assume records list contains days up to today)
+    # total present days
     present_days = sum(1 for r in records if r.get("status") == "present")
+
+    # total hours (sum hours_worked)
     total_hours = sum(float(r.get("hours_worked") or 0) for r in records)
-    # working_days should be days considered (not including future days)
-    working_days = len(records)
+
+    # working_days: exclude weekend entries (status == 'weekend' OR is_weekend True)
+    working_days = sum(1 for r in records if not (r.get("status") == "weekend" or r.get("is_weekend")))
 
     attendance_rate = round((present_days / working_days) * 100, 0) if working_days > 0 else 0
 
-    # current streak: look backwards from most recent day (today or last available)
-    sorted_by_date = sorted(records, key=lambda r: r.get("date"), reverse=True)
+    # current streak: look backwards from most recent day (records assumed ascending)
+    # stop when a non-present weekday is encountered (weekends break streak)
+    sorted_by_date_desc = sorted(records, key=lambda r: r.get("date"), reverse=True)
     streak = 0
-    for rec in sorted_by_date:
+    for rec in sorted_by_date_desc:
+        # ignore future days (records should not contain future, but keep safe)
+        # break on weekends (treat weekends as break) or first non-present weekday
         if rec.get("status") == "present":
             streak += 1
         else:
@@ -112,78 +142,63 @@ def _compute_stats_from_records(records):
     }
 
 
+
 def _get_month_records(user_id, year, month):
     """
     Return a list of daily records for the given user/month combining:
-      - real AttendanceLog DB rows (for any days that exist)
-      - random-generated placeholders for days that have no DB rows
+      - cache entries (preferred)
+      - if cache missing a day -> fill with sensible default
     The returned list contains only days <= today (so future days are ignored)
     and is sorted ascending by date.
-    
-    Each record: { "date": "YYYY-MM-DD", "hours_worked": float, "status": "present|half-day|absent" }
+
+    Each record: {
+        "date": "YYYY-MM-DD",
+        "hours_worked": float,
+        "status": "present|half-day|absent|weekend",
+        "is_weekend": bool,
+        "source": "cache" | "default"
+    }
     """
+    cache = ensure_history_exists(user_id)  # creates static history if missing
+
     records = []
     today = date.today()
     days_in_month = calendar.monthrange(year, month)[1]
 
-    # Query DB logs for this user and month
-    month_start = date(year, month, 1)
-    month_end = date(year, month, days_in_month)
-
-    # We'll only include days up to min(month_end, today)
-    effective_end = month_end if month_end <= today else today
-
-    # Fetch attendance rows in DB for the range [month_start, effective_end]
-    db_logs = AttendanceLog.query.filter(
-        AttendanceLog.user_id == user_id,
-        AttendanceLog.date >= month_start,
-        AttendanceLog.date <= effective_end
-    ).all()
-
-    db_map = {log.date.isoformat(): log.to_dict() for log in db_logs}
-
-    # Build records for each day from 1 .. effective_end.day
-    for d in range(1, effective_end.day + 1):
+    # iterate every day of the month but only up to today
+    for d in range(1, days_in_month + 1):
         dt = date(year, month, d)
-        iso = dt.isoformat()
+        if dt > today:
+            break
 
-        if iso in db_map:
-            # prefer DB record (real current-day or any day that exists)
-            rec = db_map[iso]
-            # make sure keys exist and have expected types
+        iso = dt.isoformat()
+        entry = cache.get(iso)
+
+        if entry:
+            # Cache uses keys: "status" and "hours"
             records.append({
                 "date": iso,
-                "hours_worked": float(rec.get("hours_worked") or 0),
-                "status": rec.get("status") or "absent",
-                "source": "db"
+                "hours_worked": float(entry.get("hours", 0)),
+                "status": entry.get("status", "absent"),
+                "is_weekend": dt.weekday() >= 5,
+                "source": "cache"
             })
-            continue
-
-        # No DB row -> generate a random record (preserve existing random behavior)
-        # Keep the same probabilistic distribution implemented in frontend
-        rnd = random.random()
-        hours = 0
-        status = "absent"
-        if rnd > 0.7:
-            status = "present"
-            hours = float(random.randint(6, 9))
-        elif rnd > 0.5:
-            status = "half-day"
-            hours = float(random.randint(3, 5))
         else:
-            status = "absent"
-            hours = 0.0
+            # No cache entry -> default placeholder (keeps heatmap & stats consistent)
+            is_weekend = dt.weekday() >= 5
+            default_status = "weekend" if is_weekend else "absent"
+            records.append({
+                "date": iso,
+                "hours_worked": 0.0,
+                "status": default_status,
+                "is_weekend": is_weekend,
+                "source": "default"
+            })
 
-        records.append({
-            "date": iso,
-            "hours_worked": hours,
-            "status": status,
-            "source": "random"
-        })
-
-    # Return sorted ascending by date
+    # sort by date ascending
     records = sorted(records, key=lambda r: r["date"])
     return records
+
 
 
 @attendance_api_bp.route("/current-status")
@@ -253,7 +268,12 @@ def _do_login(user_id):
         log.login_time = datetime.now()
         log.status = "present"
     db.session.commit()
+
+    # 🔥 NEW — Save to CACHE
+    set_day(user_id, today, "present", 0)
+
     return {"success": True, "message": "Logged In Successfully", "today": log.to_dict()}
+
 
 
 def _do_logout(user_id):
@@ -266,6 +286,16 @@ def _do_logout(user_id):
     if log.login_time:
         delta = log.logout_time - log.login_time
         log.hours_worked = round(delta.total_seconds() / 3600, 2)
+
+    log.calculate_status()
+    log.calculate_productivity()
+    db.session.commit()
+
+    # 🔥 NEW — Save to CACHE after computing hours + status
+    set_day(user_id, today, log.status, log.hours_worked)
+
+    return {"success": True, "message": "Logged Out Successfully", "today": log.to_dict()}
+
 
     log.calculate_status()
     log.calculate_productivity()
@@ -322,6 +352,9 @@ def attendance_predictions():
     try:
         preds = predictor.predict_all()
 
+        # -------------------------------
+        # WEEK FORECAST
+        # -------------------------------
         next_week = preds.get("next_week_forecast") or []
         week_list = []
         for i, val in enumerate(next_week):
@@ -332,15 +365,33 @@ def attendance_predictions():
                 "probability": round(float(val) * 100, 1)
             })
 
+        # -------------------------------
+        # TOMORROW PREDICTION
+        # -------------------------------
         tomorrow_val = float(preds.get("average_prediction", 0))
 
+        # -------------------------------
+        # ABSENCE RISK
+        # -------------------------------
         absence_prob = preds.get("absence_likelihood", 1 - tomorrow_val)
-        risk = "low"
-        if absence_prob > 0.4:
+        if absence_prob > 0.40:
             risk = "high"
         elif absence_prob > 0.25:
             risk = "medium"
+        else:
+            risk = "low"
 
+        # -------------------------------
+        # REAL STREAK FORECAST (DICT)
+        # -------------------------------
+        streak = predictor.calculate_streak_forecast(
+            df=predictor.load_data(),
+            tomorrow_pred=tomorrow_val
+        )
+
+        # -------------------------------
+        # FINAL JSON RESPONSE
+        # -------------------------------
         response = {
             "success": True,
             "predictions": {
@@ -352,9 +403,9 @@ def attendance_predictions():
                 },
                 "weekly_trend": week_list,
                 "streak_analysis": {
-                    "current_streak": preds.get("streak_prediction", 0),
-                    "probability_continue": 0,
-                    "expected_end_in": 0
+                    "current_streak": streak.get("current_streak", 0),
+                    "probability_continue": streak.get("probability_continue", 0),
+                    "expected_end_in": streak.get("expected_end_in", 0)
                 },
                 "absence_likelihood": {
                     "risk_level": risk,
@@ -363,9 +414,12 @@ def attendance_predictions():
                 }
             }
         }
+
         return jsonify(response)
+
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 # NEW ROUTE — Insights block
