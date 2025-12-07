@@ -442,6 +442,8 @@ function generateDynamicCalendar() {
 
             const isToday = stripped.toDateString() === today.toDateString();
             const isFuture = stripped > today;
+            const dayOfWeek = stripped.getDay();  // 0 = Sun, 6 = Sat
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
 
             if (isToday) {
                 dayCell.classList.add("today");
@@ -450,20 +452,27 @@ function generateDynamicCalendar() {
             if (isFuture) {
                 dayCell.classList.add("future");
                 dayCell.title = `${dateString} - Future`;
-            } else {
+            } 
+            else if (isWeekend) {
+                dayCell.classList.add("weekend");
+                dayCell.title = `${dateString} - Weekend`;
+            } 
+            else {
                 const dayData = history[dateString];
                 if (dayData) {
                     const p = dayData.score;
+                
                     if (p >= 80) dayCell.classList.add("high-productivity");
                     else if (p >= 40) dayCell.classList.add("medium-productivity");
                     else dayCell.classList.add("low-productivity");
-
+                
                     dayCell.title = `${dateString} • ${p}% (${dayData.completed}/${dayData.total})`;
                 } else {
                     dayCell.classList.add("absent");
                     dayCell.title = `${dateString} - No data`;
                 }
             }
+
 
             dayCell.dataset.date = dateString;
             dayCell.addEventListener('click', () => handleDayClick(dateString));
@@ -1318,6 +1327,12 @@ window.refreshProductivityDashboard = refreshProductivityDashboard;
     margin: 0;
     margin-bottom: 20px;
 }
+
+.weekend {
+    background: #555 !important;
+    opacity: 0.7;
+}
+
 
 #riskFactorsList li {
     padding: 12px 15px;

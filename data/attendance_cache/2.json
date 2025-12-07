@@ -1468,7 +1468,7 @@
     "hours": 0
   },
   "2025-12-07": {
-    "status": "absent",
-    "hours": 0.01
+    "status": "present",
+    "hours": 0
   }
 }

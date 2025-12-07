@@ -265,11 +265,20 @@ class AttendanceManager {
 
 
     /* ===================================================================
-    GITHUB YEAR HEATMAP
-    =================================================================== */
+   GITHUB YEAR HEATMAP
+   =================================================================== */
     async loadYearHeatmap() {
         try {
             const today = new Date();
+
+            // --- LOCAL "today" in YYYY-MM-DD (no UTC shift) ---
+            const todayIso =
+                today.getFullYear() +
+                "-" +
+                String(today.getMonth() + 1).padStart(2, "0") +
+                "-" +
+                String(today.getDate()).padStart(2, "0");
+
             const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
             const startDate = new Date(endDate);
             startDate.setDate(endDate.getDate() - 364);
@@ -277,17 +286,30 @@ class AttendanceManager {
             const startDow = startDate.getDay();
             if (startDow !== 0) startDate.setDate(startDate.getDate() - startDow);
 
-            const monthRequests = this._getMonthRequestsForRange(startDate, endDate);
-            const monthData = await this._fetchMonthlyData(monthRequests);
-            let recMap = this._buildDateMapFromMonths(monthData);
+            // STEP 2 - Replace with RANDOM generation
+            // get today's ISO and real status for today ONLY
+            const todayIsoForRandom = new Date().toISOString().slice(0, 10);
+
+            let todayRealRecord = null;
+            try {
+                const realStatus = await fetch('/api/attendance/current-status').then(r => r.json());
+                if (realStatus.success !== false) {
+                    todayRealRecord = {
+                        status: realStatus.status || "absent",
+                        hours_worked: realStatus.total_hours || 0
+                    };
+                }
+            } catch (e) { }
+
+            let recMap = this._buildRandomAttendanceMap(startDate, endDate, todayIsoForRandom, todayRealRecord);
 
             const container = document.getElementById("attendanceCalendar");
             if (!container) return;
 
             const weekCount = 52;
             container.style.setProperty("--week-count", weekCount);
-            // ---------------- NEW MONTHLY GRID HEATMAP (FIXED) ----------------
 
+            // ---------------- NEW MONTHLY GRID HEATMAP ----------------
             container.innerHTML = "";
 
             const currentYear = today.getFullYear();
@@ -335,7 +357,14 @@ class AttendanceManager {
                 // Attendance cells
                 for (let d = 1; d <= totalDays; d++) {
                     const dateObj = new Date(currentYear, month, d);
-                    const iso = dateObj.toISOString().slice(0, 10);
+
+                    // ❗ NO toISOString() here – build ISO manually in local time
+                    const iso =
+                        currentYear +
+                        "-" +
+                        String(month + 1).padStart(2, "0") +
+                        "-" +
+                        String(d).padStart(2, "0");
 
                     const cell = document.createElement("div");
                     cell.className = "day-cell";
@@ -358,7 +387,8 @@ class AttendanceManager {
                         cls = "weekend";
                     }
 
-                    if (iso === today.toISOString().slice(0, 10)) {
+                    // highlight *local* today
+                    if (iso === todayIso) {
                         cell.classList.add("today");
                     }
 
@@ -370,41 +400,35 @@ class AttendanceManager {
 
                 monthContainer.appendChild(grid);
                 calendarRow.appendChild(monthContainer);
-                // ------------------ ENABLE MONTH CLICK ------------------ //
-                monthContainer.dataset.year = currentYear;
-                monthContainer.dataset.month = (month + 1); // numeric
 
+                // enable month click
+                monthContainer.dataset.year = currentYear;
+                monthContainer.dataset.month = month + 1;
 
                 monthContainer.addEventListener("click", () => {
-                    // highlight
-                    document.querySelectorAll(".month-container")
+                    document
+                        .querySelectorAll(".month-container")
                         .forEach(m => m.classList.remove("month-selected"));
                     monthContainer.classList.add("month-selected");
 
-                    // load stats using dataset (CORRECT)
                     this.loadMonthlyStats(
                         Number(monthContainer.dataset.year),
                         Number(monthContainer.dataset.month)
                     );
                 });
-
             }
 
-
-
-
-
-            // LEGEND
+            // Legend
             const legend = `
-    <div class="calendar-legend">
-        <div class="legend-item"><div class="color-box present"></div> Present (8h+)</div>
-        <div class="legend-item"><div class="color-box present-2"></div> Present (6–8h)</div>
-        <div class="legend-item"><div class="color-box present-1"></div> Present (0–6h)</div>
-        <div class="legend-item"><div class="color-box half-day"></div> Half-day</div>
-        <div class="legend-item"><div class="color-box absent"></div> Absent</div>
-        <div class="legend-item"><div class="color-box weekend"></div> Weekend</div>
-    </div>`;
-            // ---------------- AFTER for-loop ---------------- //
+        <div class="calendar-legend">
+            <div class="legend-item"><div class="color-box present"></div> Present (8h+)</div>
+            <div class="legend-item"><div class="color-box present-2"></div> Present (6–8h)</div>
+            <div class="legend-item"><div class="color-box present-1"></div> Present (0–6h)</div>
+            <div class="legend-item"><div class="color-box half-day"></div> Half-day</div>
+            <div class="legend-item"><div class="color-box absent"></div> Absent</div>
+            <div class="legend-item"><div class="color-box weekend"></div> Weekend</div>
+        </div>`;
+
             const currentMonth = today.getMonth();
             const allMonths = container.querySelectorAll(".month-container");
 
@@ -414,165 +438,13 @@ class AttendanceManager {
             }
 
             container.insertAdjacentHTML("beforeend", legend);
-
-
-            //             let html = `<div class="year-heatmap-wrapper">`;
-
-            //             html += `<div class="heatmap-month-row">`;
-            //             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-            //             let prevMonth = null;
-            //             for (let w = 0; w < weekCount; w++) {
-            //                 const date = new Date(startDate);
-            //                 date.setDate(startDate.getDate() + w * 7);
-            //                 const m = date.getMonth();
-            //                 const label = (date.getDate() <= 7 && m !== prevMonth) ? monthNames[m] : "";
-            //                 html += `<div class="month-label">${label}</div>`;
-            //                 prevMonth = m;
-            //             }
-            //             html += `</div>`;
-
-            //             html += `<div style="display:flex;align-items:flex-start;">
-            //                     <div class="heatmap-left-labels">
-            //                         <div>Sun</div><div>Mon</div><div>Tue</div>
-            //                         <div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-            //                     </div>
-            //                     <div class="year-heatmap">`;
-
-            //             let currentMonthIndex = -1;
-            //             let monthHTML = "";
-
-            //             for (let w = 0; w < weekCount; w++) {
-            //                 const date = new Date(startDate);
-            //                 date.setDate(startDate.getDate() + w * 7);
-
-            //                 const m = date.getMonth();
-
-            //                 if (m !== currentMonthIndex) {
-            //                     if (currentMonthIndex !== -1)
-            //                         html += `<div class="month-block">${monthHTML}</div>`;
-            //                     monthHTML = "";
-            //                     currentMonthIndex = m;
-            //                 }
-
-            //                 let weekCol = `<div class="week-column">`;
-
-            //                 for (let d = 0; d < 7; d++) {
-            //                     const cellDate = new Date(startDate);
-            //                     cellDate.setDate(startDate.getDate() + w * 7 + d);
-
-            //                     const iso = cellDate.toISOString().slice(0, 10);
-            //                     const entry = recMap[iso];
-            //                     const isWeekend = cellDate.getDay() >= 5;
-
-            //                     let cls = "absent";
-            //                     if (entry) {
-            //                         if (entry.status === "present") {
-            //                             const h = Number(entry.hours_worked);
-            //                             if (h >= 8) cls = "present";
-            //                             else if (h >= 6) cls = "present-2";
-            //                             else cls = "present-1";
-            //                         } else if (entry.status === "half-day") cls = "half-day";
-            //                         else cls = "absent";
-            //                     } else if (isWeekend) cls = "weekend";
-
-            //                     const todayStr = new Date().toISOString().slice(0, 10);
-            //                     if (iso === todayStr) cls += " today";
-
-            //                     weekCol += `<div class="heat-day ${cls}" title="${iso}"></div>`;
-            //                 }
-
-            //                 weekCol += `</div>`;
-            //                 monthHTML += weekCol;
-            //             }
-
-            //             html += `<div class="month-block">${monthHTML}</div>`;
-
-
-            //             html += `</div></div></div>`;
-            //             container.innerHTML = html;
-
-            //             /* ===========================================================
-            //    ADDING MONTH BLOCK HANDLERS (NO NAMING CONFLICTS)
-            //    =========================================================== */
-
-            //             const monthBlocks = container.querySelectorAll('.month-block');
-
-            //             // Recompute first-week start date safely (unique var names)
-            //             const hmToday = new Date();
-            //             const hmEndDate = new Date(hmToday.getFullYear(), hmToday.getMonth(), hmToday.getDate());
-            //             const hmStartDate = new Date(hmEndDate);
-            //             hmStartDate.setDate(hmEndDate.getDate() - 364);
-
-            //             const hmDow = hmStartDate.getDay();
-            //             if (hmDow !== 0) hmStartDate.setDate(hmStartDate.getDate() - hmDow);
-
-            //             // Walk through months & assign year/month attributes
-            //             let hmCursor = new Date(hmStartDate);
-            //             let hmIndex = 0;
-
-            //             while (hmIndex < monthBlocks.length) {
-            //                 const block = monthBlocks[hmIndex];
-            //                 if (!block) break;
-
-            //                 const Y = hmCursor.getFullYear();
-            //                 const M = hmCursor.getMonth() + 1;
-
-            //                 block.dataset.year = String(Y);
-            //                 block.dataset.month = String(M).padStart(2, "0");
-
-            //                 // click event
-            //                 block.addEventListener("click", () => {
-            //                     document.querySelectorAll('.month-block').forEach(b => b.classList.remove('month-selected'));
-            //                     block.classList.add('month-selected');
-            //                     this.loadMonthlyStats(Y, M);
-            //                 });
-
-            //                 // Move to next month (week-by-week)
-            //                 const curM = hmCursor.getMonth();
-            //                 do {
-            //                     hmCursor.setDate(hmCursor.getDate() + 7);
-            //                 } while (hmCursor.getMonth() === curM && hmCursor < hmEndDate);
-
-            //                 hmIndex++;
-            //             }
-
-            //             // Default: select current month
-            //             const curYear = (new Date()).getFullYear();
-            //             const curMonth = (new Date()).getMonth() + 1;
-
-            //             const defaultBlock = Array.from(monthBlocks)
-            //                 .find(b => b.dataset.year == String(curYear) && Number(b.dataset.month) === curMonth);
-
-            //             if (defaultBlock) defaultBlock.classList.add("month-selected");
-
-            //             // Load stats for default current month
-            //             this.loadMonthlyStats(curYear, curMonth);
-
-            //             /* ===========================================================
-            //                END OF ADDED BLOCK
-            //                =========================================================== */
-
-
-            //             const legend = document.createElement("div");
-            //             legend.className = "heatmap-legend";
-            //             legend.innerHTML = `
-            //             <div><strong>Legend</strong></div>
-            //             <div class="box" style="background:#2f81f7"></div> Present (8h+)
-            //             <div class="box" style="background:#5b9fff"></div> Present (6–8h)
-            //             <div class="box" style="background:#9fc8ff"></div> Present (0–6h)
-            //             <div class="box" style="background:#184a8f"></div> Half-day
-            //             <div class="box" style="background:#111"></div> Absent
-            //             <div class="box" style="background:#1a1a1a"></div> Weekend`;
-            //             container.appendChild(legend);
-
-            //             this._attachHeatmapHover();
-
         } catch (err) {
             console.error("Year heatmap error:", err);
-            this.renderEmptyCalendar();
+            this.renderEmptyCalendar?.();
         }
     }
+
+
 
     _getMonthRequestsForRange(startDate, endDate) {
         const months = new Set();
@@ -600,54 +472,58 @@ class AttendanceManager {
         return Promise.all(promises);
     }
 
-    _buildDateMapFromMonths(monthData) {
+    /* STEP 1 — Replace _buildDateMapFromMonths() with RANDOM generation */
+    _buildRandomAttendanceMap(startDate, endDate, todayIso, todayRealRecord) {
         const map = {};
-        monthData.forEach(m => {
-            m.records.forEach(r => map[r.date] = r);
-        });
+        const cursor = new Date(startDate);
+
+        while (cursor <= endDate) {
+            const iso = cursor.toISOString().slice(0, 10);
+            const day = cursor.getDay();
+
+            // Weekend
+            if (day === 1 || day === 0) {
+                map[iso] = { status: "weekend", hours_worked: 0 };
+            }
+            // Today = REAL DATA
+            else if (iso === todayIso) {
+                map[iso] = todayRealRecord || { status: "absent", hours_worked: 0 };
+            }
+            // Past days = RANDOM
+            else if (cursor < new Date(todayIso)) {
+                const r = Math.random();
+
+                if (r < 0.1) {
+                    map[iso] = { status: "absent", hours_worked: 0 };
+                } else if (r < 0.2) {
+                    map[iso] = { status: "half-day", hours_worked: 4 };
+                } else {
+                    // present (random hours)
+                    const h = Math.floor(4 + Math.random() * 5); // 4–8 hours
+                    map[iso] = { status: "present", hours_worked: h };
+                }
+            }
+            // Future days = no data
+            else {
+                map[iso] = { status: "no-data", hours_worked: 0 };
+            }
+
+            cursor.setDate(cursor.getDate() + 1);
+        }
+
         return map;
     }
 
-    _attachHeatmapHover() {
-        if ('ontouchstart' in window) return;
 
-        const tooltip = document.createElement('div');
-        tooltip.style.position = 'fixed';
-        tooltip.style.pointerEvents = 'none';
-        tooltip.style.padding = '8px 10px';
-        tooltip.style.background = 'var(--bg-card)';
-        tooltip.style.border = '1px solid var(--glass-border)';
-        tooltip.style.borderRadius = '6px';
-        tooltip.style.fontSize = '0.75rem';
-        tooltip.style.color = 'var(--text-primary)';
-        tooltip.style.boxShadow = '0 6px 18px rgba(0,0,0,0.6)';
-        tooltip.style.display = 'none';
-        document.body.appendChild(tooltip);
-
-        document.querySelectorAll('.heat-day').forEach(node => {
-            node.addEventListener('mouseenter', () => {
-                tooltip.textContent = node.getAttribute('title');
-                tooltip.style.display = 'block';
-            });
-            node.addEventListener('mousemove', e => {
-                tooltip.style.left = (e.pageX + 12) + 'px';
-                tooltip.style.top = (e.pageY + 12) + 'px';
-            });
-            node.addEventListener('mouseleave', () => tooltip.style.display = 'none');
-        });
-    }
 
     async loadMonthlyStats(year, month) {
         try {
-            // Reuse the API you already use for the heatmap
             const res = await fetch(`/api/attendance/monthly?year=${year}&month=${month}`);
             const data = await res.json();
 
             if (!data.success) return;
 
             const records = data.records || [];
-
-            // Compute stats on frontend
             let present = 0;
             let hours = 0;
 
@@ -662,20 +538,14 @@ class AttendanceManager {
                 ? Math.round((present / working.length) * 100)
                 : 0;
 
-            // update UI (Monthly Statistics ONLY)
             document.getElementById('presentDays').textContent = present;
             document.getElementById('attendanceRate').textContent = attendanceRate + "%";
             document.getElementById('totalHours').textContent = hours.toFixed(2);
-
-            // ❗ DO NOT TOUCH STREAK HERE (Backend & Predictions handle it)
-            // So we DO NOT calculate OR overwrite streak anymore
 
         } catch (err) {
             console.error("Monthly Stats Error:", err);
         }
     }
-
-
 
 
 
