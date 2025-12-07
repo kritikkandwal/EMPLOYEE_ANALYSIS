@@ -16,6 +16,9 @@ import os
 from models.database import db            # <-- FIX: use global DB
 from models.user import User              # <-- FIX: use the real User model
 
+# NEW: ML forecaster for productivity
+from ml_models.productivity_forecaster import ProductivityForecaster
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-key-change-in-production'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///productivity.db'
@@ -25,6 +28,9 @@ db.init_app(app)                           # <-- FIX: initialize DB correctly
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+# Instantiate global productivity forecaster
+productivity_forecaster = ProductivityForecaster(data_path='data/')
 
 
 @login_manager.user_loader
@@ -204,7 +210,73 @@ def time_tracking():
 
 
 # --------------------------------------------------------
-# ----------- NEW ML ATTENDANCE SYSTEM ROUTES ------------
+# ----------- NEW ML PRODUCTIVITY SYSTEM ROUTES ----------
+# --------------------------------------------------------
+
+@app.route('/predict-productivity')
+@login_required
+def predict_productivity():
+    """
+    AI block for productivity predictions.
+
+    Optional query parameters (taken from today's real data):
+      today_score: float (0-100)
+      completed: int
+      total: int
+    """
+    today_score = request.args.get('today_score', type=float)
+    completed = request.args.get('completed', type=int)
+    total = request.args.get('total', type=int)
+
+    summary = productivity_forecaster.get_prediction_summary(
+        user_id=current_user.id,
+        today_score=today_score,
+        completed=completed,
+        total=total
+    )
+    return jsonify(summary)
+
+
+@app.route('/month-productivity-stats')
+@login_required
+def month_productivity_stats():
+    """
+    Returns per-day productivity stats for the logged-in user.
+
+    Query params:
+      year (optional, defaults to current year)
+      month (optional, if omitted returns full year)
+    """
+    year = request.args.get('year', type=int)
+    month = request.args.get('month', type=int)
+
+    stats = productivity_forecaster.get_monthly_stats(
+        user_id=current_user.id,
+        year=year,
+        month=month
+    )
+    return jsonify(stats)
+
+
+@app.route('/get-productivity-trends')
+@login_required
+def get_productivity_trends():
+    """
+    Returns historical + forecast productivity data for charts.
+    """
+    history_days = request.args.get('history_days', default=30, type=int)
+    horizon = request.args.get('horizon', default=7, type=int)
+
+    data = productivity_forecaster.get_trend_data(
+        user_id=current_user.id,
+        history_days=history_days,
+        horizon=horizon
+    )
+    return jsonify(data)
+
+
+# --------------------------------------------------------
+# ----------- EXISTING ML ATTENDANCE SYSTEM --------------
 # --------------------------------------------------------
 
 from models.attendance_models.predict_attendance import predictor
@@ -299,6 +371,25 @@ def download_attendance_data():
 
 
 app.register_blueprint(attendance_api_bp, url_prefix="/api/attendance")
+
+@app.route('/api/update-productivity', methods=['POST'])
+@login_required
+def api_update_productivity():
+    data = request.json
+    date = data.get("date")
+    completed = data.get("completed", 0)
+    total = data.get("total", 0)
+    score = data.get("score", 0)
+
+    productivity_forecaster.update_today(
+    current_user.id,
+    today_score=score,
+    completed=completed,
+    total=total
+    )
+
+
+    return jsonify({"status": "success", "message": "Productivity updated"})
 
 
 # -----------------------------------

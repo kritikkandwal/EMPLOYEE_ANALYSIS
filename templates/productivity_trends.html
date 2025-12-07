@@ -10,11 +10,11 @@
 <div class="attendance-grid">
     <!-- Real-time Productivity Status Card -->
     <div class="glass-card status-card">
-        <h2>📊 Today's Productivity</h2>
+        <h2>📊 <span id="productivityCardTitle">Today's Productivity</span></h2>
         <div class="productivity-status" id="todayProductivity">
             <div class="status-loading">
                 <i class="fas fa-spinner fa-spin"></i>
-                Loading today's productivity data...
+                Loading productivity data...
             </div>
         </div>
     </div>
@@ -23,7 +23,7 @@
     <div class="glass-card calendar-card">
         <div class="calendar-header">
             <h2>Productivity Calendar - <span id="currentYear"></span></h2>
-            <p>Each box represents one day — brighter colors mean higher productivity.</p>
+            <p>Each box represents one day — brighter colors mean higher productivity. Click a day for details.</p>
         </div>
 
         <div class="calendar-container">
@@ -41,36 +41,119 @@
     </div>
 <br>
     <!-- Live Stats -->
-    <div class="glass-card stats-card">
-        <h2>Live Statistics</h2>
-        <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-value" id="currentStreak">0</div>
-                <div class="stat-label">Current Streak</div>
+    <div style="display:none">
+    <span id="currentStreak"></span>
+    <span id="attendanceRate"></span>
+    <span id="avgProductivity"></span>
+    <span id="daysTracked"></span>
+</div>
+
+<br>
+    <!-- AI Predictions - Redesigned to match attendance block -->
+    <div class="glass-card ml-predictions-card">
+        <h3>🤖 AI Productivity Predictions</h3>
+
+        <div class="ml-models-tabs">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="tomorrow">Tomorrow</button>
+                <button class="tab-btn" data-tab="weekly">Next Week</button>
+                <button class="tab-btn" data-tab="streak">Streak Forecast</button>
+                <button class="tab-btn" data-tab="risk">Workload Risk</button>
             </div>
-            <div class="stat-item">
-                <div class="stat-value" id="attendanceRate">0%</div>
-                <div class="stat-label">Attendance Rate</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="avgProductivity">0%</div>
-                <div class="stat-label">Avg Productivity</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="daysTracked">0</div>
-                <div class="stat-label">Days Tracked</div>
+
+            <div class="tab-content">
+                <!-- Tomorrow Prediction -->
+                <div class="tab-pane active" id="tomorrow-tab">
+                    <div class="prediction-main">
+                        <div class="prediction-score" id="tomorrowProbability">0%</div>
+                        <div class="prediction-label">Productivity Score</div>
+                        <div class="confidence-badge" id="tomorrowConfidence">
+                            <i class="fas fa-shield-alt"></i>
+                            <span id="confidenceLevel">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="prediction-details">
+                        <div class="detail-item">
+                            <span>Expected Hours:</span>
+                            <span id="expectedHours">0</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>Model Used:</span>
+                            <span id="modelUsed">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Trend -->
+                <div class="tab-pane" id="weekly-tab">
+                    <div class="weekly-predictions">
+                        <div class="week-header">
+                            <h4>Next 7 Days Forecast</h4>
+                            <div class="avg-attendance">
+                                Avg: <span id="weeklyAvg">0%</span>
+                            </div>
+                        </div>
+                        <div class="days-grid" id="weeklyDaysGrid">
+                            <!-- JS will populate -->
+                            <div class="day-prediction loading">
+                                <div class="day-name">--</div>
+                                <div class="day-probability">--%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Streak Forecast -->
+                <div class="tab-pane" id="streak-tab">
+                    <div class="streak-prediction">
+                        <div class="streak-current">
+                            <span>Current Streak:</span>
+                            <strong id="currentStreakValue">0</strong> days
+                        </div>
+                        <div class="streak-continuation">
+                            <span>Continue Probability:</span>
+                            <strong id="streakProbability">0%</strong>
+                        </div>
+                        <div class="streak-forecast">
+                            <span>Expected to continue for:</span>
+                            <strong id="expectedContinuation">0</strong> more days
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workload Risk -->
+                <div class="tab-pane" id="risk-tab">
+                    <div class="risk-assessment">
+                        <div class="risk-level" id="absenceRisk">
+                            <span class="risk-badge low">Loading...</span>
+                        </div>
+                        <div class="risk-probability">
+                            Workload Risk: <strong id="absenceProbability">0%</strong>
+                        </div>
+                        <div class="risk-factors">
+                            <h5>Key Factors:</h5>
+                            <ul id="riskFactorsList">
+                                <li>Analyzing patterns...</li>
+                            </ul>
+                        </div>
+                        <div class="focus-recommendation">
+                            <h5>Recommended Focus:</h5>
+                            <p id="focusRecommendation">Maintain consistent task completion patterns.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-<br>
-    <!-- AI Predictions -->
-    <div class="glass-card predictions-card">
-        <h2>🤖 AI Insights & Predictions</h2>
-        <div class="prediction-content" id="aiPredictions">
-            <div class="prediction-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                Generating AI insights based on your task completion patterns...
-            </div>
+
+        <div class="ml-actions">
+            <button class="btn btn-outline" id="refreshProductivityPredictions">
+                <i class="fas fa-sync-alt"></i>
+                Refresh Predictions
+            </button>
+            <button class="btn btn-outline" id="retrainProductivityModels">
+                <i class="fas fa-brain"></i>
+                Retrain Models
+            </button>
         </div>
     </div>
 <br>
@@ -87,60 +170,191 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     initializeProductivityDashboard();
+    setupProductivityTabs();
 });
 
-function initializeProductivityDashboard() {
-    updateTodayProductivity();
-    generateDynamicCalendar();
-    updateStatistics();
-    initializeStreakChart();
-    generateAIInsights();
-    
-    // Set up auto-refresh every 30 seconds
-    setInterval(updateTodayProductivity, 30000);
+/* ============================================================
+   FIX 1 — TRUE LOCAL DATE FUNCTION (IST, NO UTC SHIFT)
+   ============================================================*/
+function getLocalDateString() {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().split("T")[0];
 }
 
+/* ============================================================
+   GLOBAL STATE
+   ============================================================*/
+let productivityStatsByDate = {};    
+let productivitySummary = {};        
+let selectedDate = null;             
+let streakChartInstance = null;
+let aiPredictionsData = null;
+
+const productivityEndpoints = {
+    monthStats: "{{ url_for('month_productivity_stats') }}",
+    trends: "{{ url_for('get_productivity_trends') }}",
+    predict: "{{ url_for('predict_productivity') }}"
+};
+
+/* ============================================================
+   TABS
+   ============================================================*/
+function setupProductivityTabs() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tabId = this.dataset.tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            document.querySelectorAll('.tab-pane').forEach(c => c.classList.remove('active'));
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+        });
+    });
+
+    document.getElementById('refreshProductivityPredictions').addEventListener('click', function() {
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+        btn.disabled = true;
+
+        generateAIInsights().finally(() => {
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showProductivityNotification('Predictions refreshed successfully!', 'success');
+            }, 500);
+        });
+    });
+
+    document.getElementById('retrainProductivityModels').addEventListener('click', function() {
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-cog fa-spin"></i> Training...';
+        btn.disabled = true;
+
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            showProductivityNotification('Models retrained with latest data!', 'info');
+        }, 2000);
+    });
+}
+
+function showProductivityNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `ai-notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+        ${message}
+    `;
+    document.querySelector('.ml-predictions-card').appendChild(notification);
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-10px)';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+/* ============================================================
+   INITIALIZE DASHBOARD
+   ============================================================*/
+function initializeProductivityDashboard() {
+    loadProductivityDataFromServer()
+        .then(() => {
+            updateTodayProductivity();
+            generateDynamicCalendar();
+            updateStatistics();
+            initializeStreakChart();
+            generateAIInsights();
+            setInterval(refreshProductivityDashboard, 30000);
+        })
+        .catch(err => {
+            console.error("Error initializing productivity dashboard:", err);
+            updateTodayProductivity();
+            generateDynamicCalendar();
+            updateStatistics();
+            initializeStreakChart();
+            generateAIInsights();
+        });
+}
+
+function refreshProductivityDashboard() {
+    loadProductivityDataFromServer()
+        .then(() => {
+            updateTodayProductivity();
+            updateStatistics();
+            updateStreakChartFromData();
+            generateAIInsights();
+        })
+        .catch(err => console.error("Error refreshing dashboard:", err));
+}
+
+/* ============================================================
+   LOAD BACKEND DATA
+   ============================================================*/
+function loadProductivityDataFromServer() {
+    const currentYear = new Date().getFullYear();
+    const url = `${productivityEndpoints.monthStats}?year=${currentYear}`;
+
+    return fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
+        .then(resp => resp.json())
+        .then(data => {
+            productivityStatsByDate = data.by_date || {};
+            productivitySummary = data.summary || {};
+            localStorage.setItem('productivity_history', JSON.stringify(productivityStatsByDate));
+            document.getElementById('currentYear').textContent = productivitySummary.year || currentYear;
+        });
+}
+
+/* ============================================================
+   TODAY CARD (FIXED: TRUE LOCAL DATE)
+   ============================================================*/
 function updateTodayProductivity() {
+    const today = getLocalDateString();
     const todayContainer = document.getElementById('todayProductivity');
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Get productivity data from localStorage (synced from task_analysis.html)
-    const productivityData = JSON.parse(localStorage.getItem('current_productivity')) || {};
-    const productivityHistory = JSON.parse(localStorage.getItem('productivity_history')) || {};
-    
-    const todayData = productivityHistory[today] || productivityData;
-    
-    if (todayData && todayData.score !== undefined) {
-        const level = todayData.level || getProductivityLevel(todayData.score);
-        const levelClass = level.toLowerCase();
-        
+    const titleEl = document.getElementById('productivityCardTitle');
+
+    const history = productivityStatsByDate;
+    const selectedKey = selectedDate || today;
+    const dayData = history[selectedKey];
+
+    if (selectedDate && selectedDate !== today) {
+        titleEl.textContent = `Productivity on ${formatDateLabel(selectedKey)}`;
+    } else {
+        titleEl.textContent = "Today's Productivity";
+    }
+
+    if (dayData && dayData.score !== undefined) {
+        const level = dayData.level || getProductivityLevel(dayData.score);
+        const isToday = selectedKey === today;
+
         todayContainer.innerHTML = `
-            <div class="productivity-score ${levelClass}">
-                <div class="score-value">${todayData.score}%</div>
+            <div class="productivity-score ${level.toLowerCase()}">
+                <div class="score-value">${dayData.score}%</div>
                 <div class="score-label">${level} Productivity</div>
             </div>
             <div class="completion-details">
                 <div class="detail-item">
                     <span>Tasks Completed:</span>
-                    <strong>${todayData.completed || 0}/${todayData.total || 0}</strong>
+                    <strong>${dayData.completed || 0}/${dayData.total || 0}</strong>
                 </div>
                 <div class="detail-item">
-                    <span>Last Updated:</span>
-                    <strong>${new Date().toLocaleTimeString()}</strong>
+                    <span>${isToday ? "Last Updated:" : "Selected Day:"}</span>
+                    <strong>${isToday ? new Date().toLocaleTimeString() : formatDateLabel(selectedKey)}</strong>
                 </div>
             </div>
-            ${todayData.total > 0 ? `
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: ${todayData.score}%"></div>
-            </div>
-            ` : '<p class="no-tasks">No tasks scheduled for today</p>'}
+            ${
+                dayData.total > 0
+                    ? `<div class="progress-bar"><div class="progress-fill" style="width: ${dayData.score}%"></div></div>`
+                    : '<p class="no-tasks">No tasks recorded for this day</p>'
+            }
         `;
     } else {
         todayContainer.innerHTML = `
             <div class="no-data">
                 <i class="fas fa-calendar-day"></i>
-                <h3>No productivity data for today</h3>
-                <p>Complete tasks in the Task Manager to see your productivity score</p>
+                <h3>No productivity data</h3>
+                <p>Complete tasks in the Task Manager to generate real productivity data for today.</p>
                 <a href="{{ url_for('task_analysis') }}" class="btn btn-primary">
                     <i class="fas fa-tasks"></i>
                     Go to Task Manager
@@ -150,30 +364,46 @@ function updateTodayProductivity() {
     }
 }
 
-function getProductivityLevel(score) {
-    if (score >= 80) return 'HIGH';
-    if (score >= 40) return 'MEDIUM';
-    return 'LOW';
+function formatDateLabel(dateString) {
+    const d = new Date(dateString);
+    return isNaN(d)
+        ? dateString
+        : d.toLocaleDateString("default", { month: "short", day: "numeric", year: "numeric" });
 }
 
+function getProductivityLevel(score) {
+    if (score >= 80) return "HIGH";
+    if (score >= 40) return "MEDIUM";
+    return "LOW";
+}
+
+/* ============================================================
+   CALENDAR (FIXED: TODAY HIGHLIGHT + COLOR FIX)
+   ============================================================*/
 function generateDynamicCalendar() {
+
     const calendarRow = document.getElementById('calendarRow');
     const currentYear = new Date().getFullYear();
-    document.getElementById('currentYear').textContent = currentYear;
-    
+
+    // FORCE TODAY to be local date ONLY (no UTC shift)
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const todayString = now.toISOString().split("T")[0];
+    const today = new Date(todayString);
+
     calendarRow.innerHTML = '';
-    
-    // Generate all months for current year
+
+    const history = productivityStatsByDate || {};
+
     for (let month = 0; month < 12; month++) {
         const monthContainer = document.createElement('div');
         monthContainer.className = 'month-container';
-        
+
         const monthTitle = document.createElement('div');
         monthTitle.className = 'month-title';
         monthTitle.textContent = new Date(currentYear, month).toLocaleString('default', { month: 'short' });
         monthContainer.appendChild(monthTitle);
-        
-        // Weekday headers
+
         const weekdaysRow = document.createElement('div');
         weekdaysRow.className = 'weekdays';
         ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
@@ -183,292 +413,314 @@ function generateDynamicCalendar() {
             weekdaysRow.appendChild(d);
         });
         monthContainer.appendChild(weekdaysRow);
-        
+
         const daysGrid = document.createElement('div');
         daysGrid.className = 'days-grid';
-        
+
         const firstDay = new Date(currentYear, month, 1);
         const totalDays = new Date(currentYear, month + 1, 0).getDate();
         const startOffset = firstDay.getDay();
-        const today = new Date();
-        
-        // Get productivity history
-        const productivityHistory = JSON.parse(localStorage.getItem('productivity_history')) || {};
-        
-        // Fill empty cells for days before the first day of month
+
+        // Empty cells
         for (let i = 0; i < startOffset; i++) {
             const empty = document.createElement('div');
             empty.className = 'day-cell empty';
             daysGrid.appendChild(empty);
         }
-        
-        // Create day cells
+
+        // Day cells
         for (let day = 1; day <= totalDays; day++) {
             const dayCell = document.createElement('div');
             dayCell.className = 'day-cell';
-            
-            const currentDate = new Date(currentYear, month, day);
-            const dateString = currentDate.toISOString().split('T')[0];
-            const isToday = currentDate.toDateString() === today.toDateString();
-            const isFuture = currentDate > today;
-            
+
+            const dateObj = new Date(currentYear, month, day);
+
+            // FIX: Strip UTC offset and recompute raw date
+            const stripped = new Date(dateObj);
+            stripped.setMinutes(stripped.getMinutes() - stripped.getTimezoneOffset());
+            const dateString = stripped.toISOString().split("T")[0];
+
+            const isToday = stripped.toDateString() === today.toDateString();
+            const isFuture = stripped > today;
+
             if (isToday) {
-                dayCell.classList.add('today');
+                dayCell.classList.add("today");
             }
-            
+
             if (isFuture) {
-                dayCell.classList.add('future');
+                dayCell.classList.add("future");
                 dayCell.title = `${dateString} - Future`;
             } else {
-                // Check if we have productivity data for this day
-                const dayData = productivityHistory[dateString];
-                
+                const dayData = history[dateString];
                 if (dayData) {
-                    // Use real productivity data
-                    const productivity = dayData.score;
-                    if (productivity >= 80) dayCell.classList.add('high-productivity');
-                    else if (productivity >= 40) dayCell.classList.add('medium-productivity');
-                    else dayCell.classList.add('low-productivity');
-                    
-                    dayCell.title = `${dateString} - ${productivity}% productivity (${dayData.completed}/${dayData.total} tasks)`;
+                    const p = dayData.score;
+                    if (p >= 80) dayCell.classList.add("high-productivity");
+                    else if (p >= 40) dayCell.classList.add("medium-productivity");
+                    else dayCell.classList.add("low-productivity");
+
+                    dayCell.title = `${dateString} • ${p}% (${dayData.completed}/${dayData.total})`;
                 } else {
-                    // Generate random data for past days (until yesterday)
-                    const productivity = Math.random() * 100;
-                    if (productivity >= 80) dayCell.classList.add('high-productivity');
-                    else if (productivity >= 40) dayCell.classList.add('medium-productivity');
-                    else dayCell.classList.add('low-productivity');
-                    
-                    dayCell.title = `${dateString} - ${Math.round(productivity)}% productivity (simulated)`;
+                    dayCell.classList.add("absent");
+                    dayCell.title = `${dateString} - No data`;
                 }
             }
-            
+
+            dayCell.dataset.date = dateString;
+            dayCell.addEventListener('click', () => handleDayClick(dateString));
+
             daysGrid.appendChild(dayCell);
         }
-        
+
         monthContainer.appendChild(daysGrid);
         calendarRow.appendChild(monthContainer);
     }
 }
 
+
+function handleDayClick(dateString) {
+    selectedDate = dateString;
+    updateTodayProductivity();
+}
+
+/* ============================================================
+   STATISTICS CARD
+   ============================================================*/
 function updateStatistics() {
-    const productivityHistory = JSON.parse(localStorage.getItem('productivity_history')) || {};
-    const dates = Object.keys(productivityHistory).sort();
-    const today = new Date().toISOString().split('T')[0];
-    
+    const history = productivityStatsByDate || {};
+    const dates = Object.keys(history).sort();
+
     if (dates.length === 0) {
-        // Initialize with demo data if no real data exists
-        initializeDemoData();
-        return updateStatistics(); // Recursive call with demo data
+        document.getElementById('currentStreak').textContent = 0;
+        document.getElementById('attendanceRate').textContent = '0%';
+        document.getElementById('avgProductivity').textContent = '0%';
+        document.getElementById('daysTracked').textContent = 0;
+        return;
     }
-    
-    // Calculate statistics
-    const scores = dates.map(date => productivityHistory[date].score);
+
+    const scores = dates.map(date => history[date].score);
     const avgProductivity = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-    
-    // Calculate current streak (consecutive days with productivity > 0)
+
     let currentStreak = 0;
-    const sortedDates = dates.sort((a, b) => new Date(b) - new Date(a));
-    
-    for (let date of sortedDates) {
-        if (productivityHistory[date].score > 0) {
-            currentStreak++;
-        } else {
-            break;
-        }
+    const sorted = dates.sort((a, b) => new Date(b) - new Date(a));
+    for (let d of sorted) {
+        if (history[d].score > 0) currentStreak++;
+        else break;
     }
-    
-    // Update DOM
+
+    const attendanceRate = Math.round((dates.length / 365) * 100);
+
     document.getElementById('currentStreak').textContent = currentStreak;
-    document.getElementById('attendanceRate').textContent = `${Math.round((dates.length / 365) * 100)}%`;
+    document.getElementById('attendanceRate').textContent = `${attendanceRate}%`;
     document.getElementById('avgProductivity').textContent = `${avgProductivity}%`;
     document.getElementById('daysTracked').textContent = dates.length;
 }
 
-function initializeDemoData() {
-    // Generate 30 days of demo data leading up to today
-    const demoData = {};
-    const today = new Date();
-    
-    for (let i = 29; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        const dateString = date.toISOString().split('T')[0];
-        
-        // Realistic productivity pattern (higher on weekdays, lower on weekends)
-        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-        const baseProductivity = isWeekend ? 30 : 70;
-        const variation = Math.random() * 40 - 20; // ±20% variation
-        const productivity = Math.max(0, Math.min(100, baseProductivity + variation));
-        
-        demoData[dateString] = {
-            score: Math.round(productivity),
-            level: getProductivityLevel(productivity),
-            completed: Math.round(productivity / 20), // Simulate task count
-            total: 5 // Assume 5 tasks per day
+/* ============================================================
+   AI INSIGHTS (FIXED TODAY DATE)
+   ============================================================*/
+function generateAIInsights() {
+    const today = getLocalDateString();
+    const history = productivityStatsByDate || {};
+    const todayData = history[today] || {};
+
+    const params = new URLSearchParams();
+    if (todayData.score !== undefined) params.append("today_score", todayData.score);
+    if (todayData.completed !== undefined) params.append("completed", todayData.completed);
+    if (todayData.total !== undefined) params.append("total", todayData.total);
+
+    const url =
+        params.toString().length > 0
+            ? `${productivityEndpoints.predict}?${params.toString()}`
+            : productivityEndpoints.predict;
+
+    fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+        .then(resp => resp.json())
+        .then(data => {
+            aiPredictionsData = data;
+            updateProductivityPredictions(data);
+        })
+        .catch(err => {
+            console.error("Prediction error:", err);
+            updateProductivityPredictions(null);
+        });
+}
+
+/* ============================================================
+   UPDATE PREDICTION UI
+   ============================================================*/
+function updateProductivityPredictions(data) {
+    if (!data) {
+        data = {
+            tomorrow_score: 75,
+            next_7_days: [80, 75, 70, 85, 90, 75, 80],
+            streak_prediction: { current: 5, continue_probability: 65, expected_duration: 8 },
+            workload_risk: { level: 'medium', probability: 0.4, factors: ['Variable patterns'] },
+            recommendation: "Maintain consistency.",
+            focus_area: "consistency",
+            confidence: 0.78
         };
     }
-    
-    localStorage.setItem('productivity_history', JSON.stringify(demoData));
+
+    const tomorrow = Math.round(data.tomorrow_score);
+    document.getElementById("tomorrowProbability").textContent = tomorrow + "%";
+    document.getElementById("confidenceLevel").textContent =
+        Math.round(data.confidence * 100) + "% confidence";
+
+    const expectedHours = Math.round((tomorrow / 100) * 8);
+    document.getElementById("expectedHours").textContent = expectedHours + "h";
+    document.getElementById("modelUsed").textContent = "XGBoost";
+
+    /* WEEKLY */
+    const next7 = data.next_7_days;
+    if (next7.length > 0) {
+        document.getElementById("weeklyAvg").textContent =
+            Math.round(next7.reduce((a, b) => a + b, 0) / next7.length) + "%";
+
+        const grid = document.getElementById("weeklyDaysGrid");
+        grid.innerHTML = "";
+
+        const names = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+        const today = new Date();
+
+        for (let i = 0; i < 7; i++) {
+            const temp = new Date(today);
+            temp.setDate(today.getDate() + i + 1);
+            const name = names[temp.getDay()];
+
+            const div = document.createElement("div");
+            div.className = "day-prediction";
+            div.innerHTML = `
+                <div class="day-name">${name}</div>
+                <div class="day-probability">${Math.round(next7[i])}%</div>
+            `;
+            grid.appendChild(div);
+        }
+    }
+
+    /* STREAK */
+    document.getElementById("currentStreakValue").textContent = data.streak_prediction.current;
+    document.getElementById("streakProbability").textContent =
+        data.streak_prediction.continue_probability + "%";
+    document.getElementById("expectedContinuation").textContent =
+        data.streak_prediction.expected_duration;
+
+    /* RISK */
+    const risk = data.workload_risk;
+    document.getElementById("absenceRisk").innerHTML =
+        `<span class="risk-badge ${risk.level}">${risk.level.toUpperCase()} RISK</span>`;
+    document.getElementById("absenceProbability").textContent =
+        (risk.probability * 100).toFixed(1) + "%";
+
+    document.getElementById("riskFactorsList").innerHTML = risk.factors
+        .map(f => `<li>${f}</li>`)
+        .join("");
+
+    document.getElementById("focusRecommendation").textContent =
+        `${data.recommendation} Focus on ${data.focus_area}.`;
 }
 
+/* ============================================================
+   STREAK CHART
+   ============================================================*/
 function initializeStreakChart() {
     const ctx = document.getElementById("streakChart").getContext("2d");
-    const productivityHistory = JSON.parse(localStorage.getItem('productivity_history')) || {};
-    
-    // Get last 30 days of data
-    const dates = Object.keys(productivityHistory)
-        .sort()
-        .slice(-30);
-    
-    const productivityScores = dates.map(date => productivityHistory[date].score);
-    const attendance = dates.map(date => productivityHistory[date].score > 0 ? 100 : 0);
-    
-    new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: dates.map(date => new Date(date).toLocaleDateString('default', { month: 'short', day: 'numeric' })),
-            datasets: [
-                { 
-                    label: "Productivity %", 
-                    data: productivityScores, 
-                    borderColor: "#00ffff", 
-                    backgroundColor: "rgba(0,255,255,0.15)", 
-                    fill: true, 
-                    tension: 0.4,
-                    yAxisID: 'y'
-                },
-                { 
-                    label: "Attendance %", 
-                    data: attendance, 
-                    borderColor: "#00ff88", 
-                    backgroundColor: "rgba(0,255,136,0.1)", 
-                    fill: true, 
-                    tension: 0.4,
-                    yAxisID: 'y1'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false,
+
+    fetch(`${productivityEndpoints.trends}?history_days=30&horizon=7`, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        const historyDates = data.history.dates || [];
+        const historyScores = data.history.scores || [];
+        const forecastDates = data.forecast.dates || [];
+        const forecastScores = data.forecast.scores || [];
+
+        const labels = historyDates.concat(forecastDates).map(d =>
+            new Date(d).toLocaleDateString('default', { month: 'short', day: 'numeric' })
+        );
+
+        const productivityScores = historyScores.concat(forecastScores);
+
+        // Attendance: if productivity > 0 => present
+        const attendance = productivityScores.map(s => (s > 0 ? 100 : 0));
+
+        if (streakChartInstance) streakChartInstance.destroy();
+
+        streakChartInstance = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Productivity % (History + Forecast)",
+                        data: productivityScores,
+                        borderColor: "#00ffff",
+                        backgroundColor: "rgba(0,255,255,0.15)",
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: "Attendance %",
+                        data: attendance,
+                        borderColor: "#00ff88",
+                        backgroundColor: "rgba(0,255,136,0.1)",
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }
+                ]
             },
-            plugins: { 
-                legend: { 
-                    labels: { color: "#fff" } 
-                },
-                tooltip: {
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
                     mode: 'index',
                     intersect: false
-                }
-            },
-            scales: {
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: { color: "#fff" },
-                    grid: { color: "rgba(255,255,255,0.1)" }
                 },
-                y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: { color: "#00ff88" },
-                    grid: { drawOnChartArea: false }
+                plugins: {
+                    legend: {
+                        labels: { color: "#fff" }
+                    }
                 },
-                x: { 
-                    ticks: { color: "#fff" }, 
-                    grid: { color: "rgba(255,255,255,0.1)" } 
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: "#fff" },
+                        grid: { color: "rgba(255,255,255,0.15)" }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: "#00ff88" },
+                        grid: { drawOnChartArea: false }
+                    },
+                    x: {
+                        ticks: { color: "#ccc" },
+                        grid: { color: "rgba(255,255,255,0.1)" }
+                    }
                 }
             }
-        }
-    });
+        });
+    })
+    .catch(err => console.error("Trend chart error:", err));
 }
 
-function generateAIInsights() {
-    const container = document.getElementById('aiPredictions');
-    const productivityHistory = JSON.parse(localStorage.getItem('productivity_history')) || {};
-    const dates = Object.keys(productivityHistory);
-    
-    if (dates.length === 0) {
-        container.innerHTML = `
-            <div class="prediction-item">
-                <div class="prediction-icon"><i class="fas fa-robot"></i></div>
-                <div class="prediction-text">
-                    <h4>Welcome to Productivity Analysis!</h4>
-                    <p>Start completing tasks in the Task Manager to generate personalized AI insights</p>
-                    <small>Your productivity patterns will help us provide better recommendations</small>
-                </div>
-            </div>
-        `;
-        return;
-    }
-    
-    // Analyze patterns and generate insights
-    const recentScores = dates.slice(-7).map(date => productivityHistory[date].score);
-    const avgRecent = recentScores.reduce((a, b) => a + b, 0) / recentScores.length;
-    
-    const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const dayAverages = {};
-    
-    dates.forEach(date => {
-        const day = new Date(date).getDay();
-        if (!dayAverages[day]) dayAverages[day] = [];
-        dayAverages[day].push(productivityHistory[date].score);
-    });
-    
-    // Find best and worst days
-    let bestDay = 0, worstDay = 0;
-    Object.keys(dayAverages).forEach(day => {
-        const avg = dayAverages[day].reduce((a, b) => a + b, 0) / dayAverages[day].length;
-        if (avg > (dayAverages[bestDay] ? dayAverages[bestDay].reduce((a, b) => a + b, 0) / dayAverages[bestDay].length : 0)) {
-            bestDay = day;
-        }
-        if (avg < (dayAverages[worstDay] ? dayAverages[worstDay].reduce((a, b) => a + b, 0) / dayAverages[worstDay].length : 100)) {
-            worstDay = day;
-        }
-    });
-    
-    container.innerHTML = `
-        <div class="prediction-item">
-            <div class="prediction-icon"><i class="fas fa-brain"></i></div>
-            <div class="prediction-text">
-                <h4>Weekly Performance</h4>
-                <p>7-day average: <strong>${Math.round(avgRecent)}%</strong> productivity</p>
-                <small>${avgRecent > 70 ? 'Excellent consistency!' : 'Room for improvement in daily routine'}</small>
-            </div>
-        </div>
-        <div class="prediction-item">
-            <div class="prediction-icon"><i class="fas fa-lightbulb"></i></div>
-            <div class="prediction-text">
-                <h4>Optimal Work Days</h4>
-                <p>Your most productive day: <strong>${weekdays[bestDay]}</strong></p>
-                <small>Schedule important tasks on ${weekdays[bestDay]}s for peak performance</small>
-            </div>
-        </div>
-        <div class="prediction-item">
-            <div class="prediction-icon"><i class="fas fa-bed"></i></div>
-            <div class="prediction-text">
-                <h4>Recovery Strategy</h4>
-                <p>Lower productivity detected on <strong>${weekdays[worstDay]}</strong></p>
-                <small>Consider lighter workload or focus on creative tasks</small>
-            </div>
-        </div>
-    `;
+
+function updateStreakChartFromData() {
+    initializeStreakChart();
 }
 
-// Export functions for global access
-window.refreshProductivityDashboard = function() {
-    initializeProductivityDashboard();
-};
+window.refreshProductivityDashboard = refreshProductivityDashboard;
 </script>
+
 
 <style>
 .attendance-grid {
@@ -486,6 +738,7 @@ window.refreshProductivityDashboard = function() {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
+/* Status Card Styles */
 .status-card {
     text-align: center;
 }
@@ -590,6 +843,7 @@ window.refreshProductivityDashboard = function() {
     box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
 }
 
+/* Calendar Styles */
 .calendar-container {
     background: rgba(255,255,255,0.03);
     border-radius: 12px;
@@ -628,13 +882,14 @@ window.refreshProductivityDashboard = function() {
     width: 16px;
     height: 16px;
     border-radius: 3px;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     cursor: pointer;
     position: relative;
 }
 .day-cell:hover { 
     transform: scale(1.3); 
     z-index: 10;
+    box-shadow: 0 0 6px rgba(0, 255, 255, 0.5);
 }
 .day-cell.today {
     outline: 2px solid #00eaff;
@@ -668,6 +923,8 @@ window.refreshProductivityDashboard = function() {
     height: 14px; 
     border-radius: 3px; 
 }
+
+/* Stats Grid */
 .stats-grid { 
     display: grid; 
     grid-template-columns: 1fr 1fr; 
@@ -691,36 +948,8 @@ window.refreshProductivityDashboard = function() {
     color: var(--text-secondary);
     margin-top: 5px;
 }
-.prediction-content { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 15px; 
-}
-.prediction-item { 
-    display: flex; 
-    align-items: flex-start; 
-    gap: 15px; 
-    padding: 15px; 
-    background: rgba(255,255,255,0.03); 
-    border-radius: 12px; 
-    transition: transform 0.2s ease;
-}
-.prediction-item:hover {
-    transform: translateY(-2px);
-    background: rgba(255,255,255,0.05);
-}
-.prediction-icon { 
-    font-size: 1.5rem; 
-    color: var(--primary-glow); 
-    flex-shrink: 0;
-}
-.prediction-text h4 { 
-    margin-bottom: 5px; 
-    color: var(--text-primary); 
-}
-.prediction-text p, .prediction-text small { 
-    color: var(--text-secondary); 
-}
+
+/* Streak Chart */
 .streak-chart { 
     height: 220px; 
     position: relative; 
@@ -732,12 +961,524 @@ window.refreshProductivityDashboard = function() {
     color: var(--text-secondary);
 }
 
+/* === ML Predictions Card (Attendance Style) === */
+.ml-predictions-card {
+    background: linear-gradient(135deg, rgba(15, 15, 25, 0.9), rgba(30, 30, 50, 0.8));
+    border: 1px solid rgba(100, 100, 255, 0.2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+}
+
+.ml-predictions-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(100, 150, 255, 0.5), transparent);
+}
+
+.ml-predictions-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(100, 150, 255, 0.5);
+}
+
+/* Tab Navigation */
+.ml-models-tabs {
+    margin-bottom: 20px;
+}
+
+.tab-buttons {
+    display: flex;
+    background: rgba(20, 20, 35, 0.8);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(100, 100, 255, 0.1);
+}
+
+.tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 12px 16px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.tab-btn:hover::before {
+    left: 100%;
+}
+
+.tab-btn:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(100, 100, 255, 0.1);
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, rgba(80, 120, 255, 0.3), rgba(100, 150, 255, 0.2));
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(80, 120, 255, 0.3);
+}
+
+/* Tab Content */
+.tab-content {
+    min-height: 280px;
+    position: relative;
+}
+
+.tab-pane {
+    display: none;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Tomorrow Prediction */
+#tomorrow-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.prediction-main {
+    margin-bottom: 25px;
+}
+
+.prediction-score {
+    font-size: 4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+    text-shadow: 0 0 20px rgba(79, 172, 254, 0.3);
+    line-height: 1;
+}
+
+.prediction-label {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 15px;
+}
+
+.confidence-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(30, 30, 50, 0.7);
+    border-radius: 20px;
+    border: 1px solid rgba(100, 150, 255, 0.3);
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.confidence-badge i {
+    color: #4facfe;
+}
+
+.prediction-details {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.detail-item span:first-child {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 5px;
+}
+
+.detail-item span:last-child {
+    font-weight: 600;
+    color: #fff;
+}
+
+/* Weekly Trend */
+.weekly-predictions {
+    width: 100%;
+}
+
+.week-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.week-header h4 {
+    margin: 0;
+    color: #fff;
+}
+
+.avg-attendance {
+    background: rgba(30, 30, 50, 0.7);
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+}
+
+.day-prediction {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 5px;
+    background: rgba(30, 30, 50, 0.5);
+    border-radius: 12px;
+    transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.day-prediction:hover {
+    transform: translateY(-5px);
+    background: rgba(40, 40, 60, 0.7);
+}
+
+.day-prediction.loading {
+    opacity: 0.6;
+}
+
+.day-name {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 8px;
+}
+
+.day-probability {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: #fff;
+}
+
+.day-date {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Streak Forecast */
+.streak-prediction {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 10px 0;
+}
+
+.streak-current,
+.streak-continuation,
+.streak-forecast {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(30, 30, 50, 0.5);
+    border-radius: 12px;
+    transition: background 0.3s ease;
+}
+
+.streak-current:hover,
+.streak-continuation:hover,
+.streak-forecast:hover {
+    background: rgba(40, 40, 60, 0.7);
+}
+
+.streak-current span,
+.streak-continuation span,
+.streak-forecast span {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.streak-current strong,
+.streak-continuation strong,
+.streak-forecast strong {
+    color: #fff;
+    font-size: 1.2rem;
+}
+
+/* Risk Assessment */
+.risk-assessment {
+    padding: 10px 0;
+}
+
+.risk-level {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.risk-badge {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.risk-badge.low {
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1));
+    color: #4CAF50;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.risk-badge.medium {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.2), rgba(255, 152, 0, 0.1));
+    color: #FF9800;
+    border: 1px solid rgba(255, 152, 0, 0.3);
+}
+
+.risk-badge.high {
+    background: linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(244, 67, 54, 0.1));
+    color: #F44336;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.risk-probability {
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 15px;
+    background: rgba(30, 30, 50, 0.5);
+    border-radius: 12px;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.risk-probability strong {
+    color: #fff;
+    font-size: 1.3rem;
+}
+
+.risk-factors h5 {
+    margin-bottom: 15px;
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+#riskFactorsList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    margin-bottom: 20px;
+}
+
+#riskFactorsList li {
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    background: rgba(30, 30, 50, 0.5);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    transition: background 0.3s ease;
+    position: relative;
+    padding-left: 40px;
+}
+
+#riskFactorsList li:hover {
+    background: rgba(40, 40, 60, 0.7);
+}
+
+#riskFactorsList li::before {
+    content: '⚠️';
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.focus-recommendation {
+    padding: 15px;
+    background: rgba(30, 30, 50, 0.5);
+    border-radius: 12px;
+    border-left: 4px solid #4facfe;
+}
+
+.focus-recommendation h5 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #fff;
+    font-size: 1.1rem;
+}
+
+.focus-recommendation p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.5;
+}
+
+/* ML Actions */
+.ml-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ml-actions .btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(100, 150, 255, 0.3);
+    background: rgba(30, 30, 50, 0.5);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.ml-actions .btn:hover {
+    background: rgba(40, 40, 60, 0.7);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* AI Notification */
+.ai-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    background: rgba(0, 0, 0, 0.9);
+    border-left: 4px solid #00ff88;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+}
+
+.ai-notification.success {
+    border-left-color: #00ff88;
+}
+
+.ai-notification.info {
+    border-left-color: #00aaff;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
     .attendance-grid { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: 1fr; }
     .completion-details { flex-direction: column; gap: 15px; }
     .calendar-row { gap: 15px; }
     .month-container { min-width: 180px; }
+    
+    .tab-buttons {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 10px;
+    }
+    
+    .prediction-score {
+        font-size: 3rem;
+    }
+    
+    .prediction-details {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .days-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+    
+    .ml-actions {
+        flex-direction: column;
+    }
+    
+    .ml-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .days-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .tab-btn {
+        flex: 1 0 100%;
+    }
+    
+    .prediction-score {
+        font-size: 2.5rem;
+    }
 }
 </style>
 {% endblock %}

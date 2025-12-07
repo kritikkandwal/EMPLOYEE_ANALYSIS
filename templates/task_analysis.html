@@ -996,7 +996,24 @@
             
             // Also update current productivity state
             localStorage.setItem('current_productivity', JSON.stringify(productivityData));
+            
+            fetch("/api/update-productivity", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    date: today,
+                    completed: completedToday,
+                    total: todayTasks.length,
+                    score: productivityScore
+                })
+            })
+                .then(r => r.json())
+                .then(res => console.log("BACKEND UPDATED:", res))
+                .catch(err => console.error("BACKEND ERROR:", err));
+
         }
+
+        
 
         function getProductivityLevel(score) {
             if (score >= 80) return 'HIGH';
@@ -1418,6 +1435,8 @@
             closeContextMenu();
         });
 
+
+
         // Initialize the board when page loads
         document.addEventListener('DOMContentLoaded', initializeBoard);
 
@@ -1488,6 +1507,7 @@
                     card.style.display = "none";
                 }
             });
+            
         }
     </script>
 </body>
