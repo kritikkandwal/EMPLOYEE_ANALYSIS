@@ -160,27 +160,61 @@ def predict_productivity():
 #   UPDATE TASKS → Save into analytics_store.json
 # =====================================================================
 
-@predictions_bp.route("/api/update-tasks", methods=["POST"])
-def update_tasks():
-    """
-    Receives: { completed: int, total: int }
-    Saves into analytics_store.json
-    """
-    data = request.get_json(force=True, silent=True) or {}
-    completed = data.get("completed", 0)
-    total = data.get("total", 0)
-    ratio = round(completed / total, 3) if total > 0 else 0.0
-    # Predict status
-    if ratio >= 0.8:
-        status = "on-track"
-    elif ratio >= 0.5:
-        status = "slightly-behind"
-    else:
-        status = "behind"
-    update_whole_section("tasks", {
+@predictions_bp.route("/api/update-productivity", methods=["POST"])
+def update_productivity():
+    import datetime
+    from data.productivity.csv_writer import update_csv_for_day
+
+    data = request.get_json() or {}
+
+    date = data.get("date")
+    completed = int(data.get("completed", 0))
+    total = int(data.get("total", 0))
+
+    if not date:
+        date = datetime.date.today().isoformat()
+
+    # Calculate score + write CSV
+    score = update_csv_for_day(date, completed, total)
+
+    # Save to analytics_store.json
+    update_whole_section("productivity", {
+        "score_today": score,
         "completed_today": completed,
-        "total_today": total,
-        "completion_ratio": ratio,
-        "task_prediction": status
+        "total_today": total
     })
-    return {"success": True, "saved": True}
+
+    return {"success": True, "saved": True, "score": score}
+
+
+@productivity_bp.route("/yearly_csv")
+def yearly_from_csv():
+    import csv
+
+    records = {}
+
+    try:
+        with open("data/productivity/productivity_daily.csv", "r") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                date = row["date"]
+                score = int(row["score"])
+                completed = int(row["completed"])
+                total = int(row["total"])
+
+                level = (
+                    "HIGH" if score >= 80 else
+                    "MEDIUM" if score >= 40 else
+                    "LOW"
+                )
+
+                records[date] = {
+                    "score": score,
+                    "completed": completed,
+                    "total": total,
+                    "level": level
+                }
+    except FileNotFoundError:
+        pass
+
+    return {"success": True, "records": records}

@@ -290,21 +290,27 @@ function refreshProductivityDashboard() {
 }
 
 /* ============================================================
-   LOAD BACKEND DATA
+   LOAD BACKEND DATA (FROM CSV NOW)
    ============================================================*/
 function loadProductivityDataFromServer() {
-    const currentYear = new Date().getFullYear();
-    const url = `${productivityEndpoints.monthStats}?year=${currentYear}`;
 
-    return fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
-        .then(resp => resp.json())
-        .then(data => {
-            productivityStatsByDate = data.by_date || {};
-            productivitySummary = data.summary || {};
-            localStorage.setItem('productivity_history', JSON.stringify(productivityStatsByDate));
-            document.getElementById('currentYear').textContent = productivitySummary.year || currentYear;
-        });
+    return fetch("/api/productivity/yearly_csv", {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+    })
+    .then(resp => resp.json())
+    .then(data => {
+
+        // CSV returns: { success: true, year: 2025, records: { "2025-01-10": {...}, ... } }
+        productivityStatsByDate = data.records || {};
+
+        // optional but safe
+        localStorage.setItem('productivity_history', JSON.stringify(productivityStatsByDate));
+
+        // update UI year label
+        document.getElementById("currentYear").textContent = data.year || new Date().getFullYear();
+    });
 }
+
 
 /* ============================================================
    TODAY CARD (FIXED: TRUE LOCAL DATE)
@@ -558,32 +564,41 @@ function generateAIInsights() {
    UPDATE PREDICTION UI
    ============================================================*/
 function updateProductivityPredictions(data) {
+
     if (!data) {
+        console.warn("AI prediction returned empty. Using fallback values.");
         data = {
-            tomorrow_score: 75,
-            next_7_days: [80, 75, 70, 85, 90, 75, 80],
-            streak_prediction: { current: 5, continue_probability: 65, expected_duration: 8 },
-            workload_risk: { level: 'medium', probability: 0.4, factors: ['Variable patterns'] },
+            tomorrow_score: 70,
+            next_7_days: [72, 68, 75, 70, 74, 71, 69],
             recommendation: "Maintain consistency.",
             focus_area: "consistency",
-            confidence: 0.78
+            confidence: 0.75
         };
     }
 
-    const tomorrow = Math.round(data.tomorrow_score);
+    /* ------------------------------
+       BASIC VALUES
+    ------------------------------ */
+    const tomorrow = Math.round(data.tomorrow_score || 0);
     document.getElementById("tomorrowProbability").textContent = tomorrow + "%";
+
     document.getElementById("confidenceLevel").textContent =
-        Math.round(data.confidence * 100) + "% confidence";
+        Math.round((data.confidence || 0.5) * 100) + "% confidence";
 
     const expectedHours = Math.round((tomorrow / 100) * 8);
     document.getElementById("expectedHours").textContent = expectedHours + "h";
-    document.getElementById("modelUsed").textContent = "XGBoost";
 
-    /* WEEKLY */
-    const next7 = data.next_7_days;
+    /* NO MORE XGBOOST LABEL — but keep if UI needs it */
+    document.getElementById("modelUsed").textContent = "Random Forest (CSV Model)";
+
+    /* ------------------------------
+       WEEKLY FORECAST
+    ------------------------------ */
+    const next7 = data.next_7_days || [];
+
     if (next7.length > 0) {
-        document.getElementById("weeklyAvg").textContent =
-            Math.round(next7.reduce((a, b) => a + b, 0) / next7.length) + "%";
+        const weeklyAvg = Math.round(next7.reduce((a, b) => a + b, 0) / next7.length);
+        document.getElementById("weeklyAvg").textContent = weeklyAvg + "%";
 
         const grid = document.getElementById("weeklyDaysGrid");
         grid.innerHTML = "";
@@ -591,10 +606,10 @@ function updateProductivityPredictions(data) {
         const names = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
         const today = new Date();
 
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < next7.length; i++) {
             const temp = new Date(today);
             temp.setDate(today.getDate() + i + 1);
-            const name = names[temp.getDay()];
+            const name = names[temp.getDay()] || "DAY";
 
             const div = document.createElement("div");
             div.className = "day-prediction";
@@ -606,27 +621,68 @@ function updateProductivityPredictions(data) {
         }
     }
 
-    /* STREAK */
-    document.getElementById("currentStreakValue").textContent = data.streak_prediction.current;
-    document.getElementById("streakProbability").textContent =
-        data.streak_prediction.continue_probability + "%";
-    document.getElementById("expectedContinuation").textContent =
-        data.streak_prediction.expected_duration;
+    /* ------------------------------
+       STREAK IS NO LONGER RETURNED
+       → We compute it from CSV history instead
+    ------------------------------ */
+    try {
+        const history = productivityStatsByDate || {};
+        const dates = Object.keys(history).sort((a, b) => new Date(b) - new Date(a));
+        let streak = 0;
 
-    /* RISK */
-    const risk = data.workload_risk;
+        for (let d of dates) {
+            if (history[d].score > 0) streak++;
+            else break;
+        }
+
+        document.getElementById("currentStreakValue").textContent = streak;
+        document.getElementById("streakProbability").textContent =
+            tomorrow + "%";   // probability = tomorrow score
+        document.getElementById("expectedContinuation").textContent =
+            next7.filter(x => x >= 70).length; // days >=70% productivity
+
+    } catch (err) {
+        console.warn("Streak calculation failed:", err);
+    }
+
+    /* ------------------------------
+       RISK — Backend no longer provides.
+       We generate a simple rule.
+    ------------------------------ */
+    let avg = 0;
+    if (next7.length > 0) {
+        avg = next7.reduce((a, b) => a + b, 0) / next7.length;
+    }
+
+    let riskLevel = "low";
+    let riskProb = 10;
+    let factors = ["Stable performance"];
+
+    if (avg < 50) {
+        riskLevel = "high";
+        riskProb = 60;
+        factors = ["Low productivity average"];
+    } else if (avg < 65) {
+        riskLevel = "medium";
+        riskProb = 35;
+        factors = ["Moderate fluctuations"];
+    }
+
     document.getElementById("absenceRisk").innerHTML =
-        `<span class="risk-badge ${risk.level}">${risk.level.toUpperCase()} RISK</span>`;
-    document.getElementById("absenceProbability").textContent =
-        (risk.probability * 100).toFixed(1) + "%";
+        `<span class="risk-badge ${riskLevel}">${riskLevel.toUpperCase()} RISK</span>`;
 
-    document.getElementById("riskFactorsList").innerHTML = risk.factors
-        .map(f => `<li>${f}</li>`)
-        .join("");
+    document.getElementById("absenceProbability").textContent = riskProb + "%";
 
+    document.getElementById("riskFactorsList").innerHTML =
+        factors.map(f => `<li>${f}</li>`).join("");
+
+    /* ------------------------------
+       RECOMMENDATION
+    ------------------------------ */
     document.getElementById("focusRecommendation").textContent =
-        `${data.recommendation} Focus on ${data.focus_area}.`;
+        `${data.recommendation} (Focus: ${data.focus_area})`;
 }
+
 
 /* ============================================================
    STREAK CHART

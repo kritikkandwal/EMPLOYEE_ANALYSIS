@@ -19,6 +19,7 @@ from models.user import User              # <-- FIX: use the real User model
 # NEW: ML forecaster for productivity
 from ml_models.productivity_forecaster import ProductivityForecaster
 
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-key-change-in-production'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///productivity.db'
@@ -381,6 +382,13 @@ def download_attendance_data():
 
 
 app.register_blueprint(attendance_api_bp, url_prefix="/api/attendance")
+# REGISTER PRODUCTIVITY BLUEPRINTS
+from routes.predictions_api import predictions_bp, productivity_bp
+
+app.register_blueprint(predictions_bp)
+app.register_blueprint(productivity_bp)
+
+
 
 @app.route('/api/update-productivity', methods=['POST'])
 @login_required
