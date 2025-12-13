@@ -11,12 +11,151 @@ from models.attendance_models.predict_attendance import predictor
 from models.attendance_models.attendance_cache import (
     load_cache, save_cache, set_day, get_day, ensure_history_exists
 )
+from analytics_store import update_whole_section
+
 
 
 attendance_api_bp = Blueprint("attendance_api", __name__)
 
+def upsert_csv_for_date(date_obj, status, hours, csv_path="data/attendance/attendance_generated.csv"):
+    import os
+    import pandas as pd
+
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+
+    today_iso = date_obj.isoformat()
+    attendance_val = 1 if status == "present" else (2 if status == "half-day" else 0)
+    dow = date_obj.weekday()
+    month = date_obj.month
+
+    # If file missing → create with ALL needed columns
+    if not os.path.exists(csv_path):
+        df = pd.DataFrame([{
+            "date": today_iso,
+            "attendance": attendance_val,
+            "day_of_week": dow,
+            "month": month,
+            "hours": hours
+        }])
+        df.to_csv(csv_path, index=False)
+        return
+
+    df = pd.read_csv(csv_path)
+
+    # 🔥 ENSURE ALL REQUIRED COLUMNS EXIST
+    required_cols = ["date", "attendance", "day_of_week", "month", "hours"]
+    for col in required_cols:
+        if col not in df.columns:
+            df[col] = ""
+
+    df = df[required_cols]  # enforce correct column order
+
+    upd = {
+        "attendance": attendance_val,
+        "day_of_week": dow,
+        "month": month,
+        "hours": hours
+    }
+
+    mask = df["date"] == today_iso
+
+    if mask.any():
+        for col, val in upd.items():
+            df.loc[mask, col] = val
+    else:
+        new_row = {
+            "date": today_iso,
+            "attendance": attendance_val,
+            "day_of_week": dow,
+            "month": month,
+            "hours": hours
+        }
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+    tmp = csv_path + ".tmp"
+    df.to_csv(tmp, index=False)
+    os.replace(tmp, csv_path)
+
+
+
+
 def _last_day_of_month(year, month):
     return calendar.monthrange(year, month)[1]
+
+# def append_today_if_missing(date_obj, status, hours):
+#     import csv
+
+#     csv_path = "data/attendance/attendance_generated.csv"
+#     today_iso = date_obj.isoformat()
+
+#     # Read existing CSV dates
+#     with open(csv_path, "r") as f:
+#         reader = csv.DictReader(f)
+#         dates = {row["date"] for row in reader}
+#         fieldnames = reader.fieldnames
+
+#     # If today already exists → STOP
+#     if today_iso in dates:
+#         return
+
+#     # Prepare new row
+#     new_row = {
+#         "date": today_iso,
+#         "attendance": (
+#             "1" if status == "present" else
+#             "2" if status == "half-day" else
+#             "0"
+#         ),
+#         "day_of_week": str(date_obj.weekday()),
+#         "hours": str(hours)
+#     }
+
+#     # Append new row
+#     with open(csv_path, "a", newline="") as f:
+#         writer = csv.DictWriter(f, fieldnames=fieldnames)
+#         writer.writerow(new_row)
+
+
+# def update_csv_for_today(date_obj, status, hours):
+#     import csv
+#     csv_path = "data/attendance/attendance_generated.csv"
+
+#     rows = []
+#     updated = False
+
+#     # Read existing CSV
+#     with open(csv_path, "r") as f:
+#         reader = csv.DictReader(f)
+#         for row in reader:
+#             if row["date"] == date_obj.isoformat():
+#                 row["attendance"] = (
+#                     "1" if status == "present" else
+#                     "2" if status == "half-day" else
+#                     "0"
+#                 )
+#                 row["day_of_week"] = str(date_obj.weekday())
+#                 row["hours"] = str(hours)
+#                 updated = True
+#             rows.append(row)
+
+#     # If today not found → append new entry
+#     if not updated:
+#         rows.append({
+#             "date": date_obj.isoformat(),
+#             "attendance": (
+#                 "1" if status == "present" else
+#                 "2" if status == "half-day" else
+#                 "0"
+#             ),
+#             "day_of_week": str(date_obj.weekday()),
+#             "hours": str(hours)
+#         })
+
+#     # Write back
+#     with open(csv_path, "w", newline="") as f:
+#         writer = csv.DictWriter(f, fieldnames=["date", "attendance", "day_of_week", "hours"])
+#         writer.writeheader()
+#         writer.writerows(rows)
 
 
 def _build_calendar_for_month(year, month, logs):
@@ -271,6 +410,9 @@ def _do_login(user_id):
 
     # 🔥 NEW — Save to CACHE
     set_day(user_id, today, "present", 0)
+    # update_csv_for_today(today, "present", 0)
+    upsert_csv_for_date(today, "present", 0)
+
 
     return {"success": True, "message": "Logged In Successfully", "today": log.to_dict()}
 
@@ -283,24 +425,29 @@ def _do_logout(user_id):
         return {"success": False, "message": "You haven't logged in today"}, 400
 
     log.logout_time = datetime.now()
+
+    # Compute hours worked
     if log.login_time:
         delta = log.logout_time - log.login_time
         log.hours_worked = round(delta.total_seconds() / 3600, 2)
 
+    # Update status + productivity
     log.calculate_status()
     log.calculate_productivity()
     db.session.commit()
 
-    # 🔥 NEW — Save to CACHE after computing hours + status
+    # 🔥 NEW — Save TODAY into CACHE (THIS fixed the grey problem!)
     set_day(user_id, today, log.status, log.hours_worked)
+    upsert_csv_for_date(today, log.status, log.hours_worked)
 
-    return {"success": True, "message": "Logged Out Successfully", "today": log.to_dict()}
 
+    # update_csv_for_today(today, log.status, log.hours_worked)
+    return {
+        "success": True,
+        "message": "Logged Out Successfully",
+        "today": log.to_dict()
+    }
 
-    log.calculate_status()
-    log.calculate_productivity()
-    db.session.commit()
-    return {"success": True, "message": "Logged Out Successfully", "today": log.to_dict()}
 
 
 @attendance_api_bp.route("/mark", methods=["POST"])
@@ -323,24 +470,70 @@ def mark_attendance():
 def log_alias():
     return mark_attendance()
 
+def _get_month_records_from_csv(year, month):
+    import csv
 
-@attendance_api_bp.route("/monthly")
+    csv_path = "data/attendance/attendance_generated.csv"
+    records = []
+
+    try:
+        with open(csv_path, "r") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                dt = row["date"]
+
+                # Only include YYYY-MM dates
+                if not dt.startswith(f"{year}-{str(month).zfill(2)}"):
+                    continue
+
+                dow = int(row.get("day_of_week", "0").strip() or 0)
+                att = int(row.get("attendance", "0").strip() or 0)
+                hours = float(row.get("hours", "0").strip() or 0)
+
+
+                # Interpret the CSV values
+                # Use hours exactly as stored
+                hours = float(row.get("hours", 0))
+                
+                if dow >= 5:
+                    status = "weekend"
+                elif att == 1:
+                    status = "present"
+                elif att == 2:
+                    status = "half-day"
+                else:
+                    status = "absent"
+                
+
+                records.append({
+                    "date": dt,
+                    "status": status,
+                    "hours_worked": hours,
+                    "is_weekend": dow >= 5
+                })
+
+    except Exception as e:
+        print("CSV month read error:", e)
+
+    return records
+
+
+
+@attendance_api_bp.route("/monthly", methods=["GET"])
 @login_required
-def monthly_attendance_fake():
-    """
-    Returns the list of records for the requested year/month for the current_user.
-    This function now uses _get_month_records so DB entries override random generation and
-    the frontend heatmap receives combined data.
-    """
+def monthly_attendance():
     try:
         year = int(request.args.get("year"))
         month = int(request.args.get("month"))
 
-        records = _get_month_records(current_user.id, year, month)
-        # The frontend heatmap expects records (date, hours_worked, status)
+        # NEW — read real CSV data only
+        records = _get_month_records_from_csv(year, month)
+
         return jsonify({"success": True, "records": records})
+
     except Exception as e:
         return jsonify({"success": False, "records": [], "error": str(e)})
+
 
 
 # ----------------------------------------------------
@@ -414,6 +607,18 @@ def attendance_predictions():
                 }
             }
         }
+        
+        # ------------------------------------
+        # SAVE INTO CENTRAL ANALYTICS STORE
+        # ------------------------------------
+        attendance_section = {
+            "status_today": "",
+            "prediction": response["predictions"]["tomorrow_prediction"]["probability"],
+            "absence_likelihood": response["predictions"]["absence_likelihood"]["risk_level"],
+            "trend": [item["probability"] for item in response["predictions"]["weekly_trend"]]
+        }
+
+        update_whole_section("attendance", attendance_section)
 
         return jsonify(response)
 
@@ -443,6 +648,64 @@ def attendance_insights():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+@attendance_api_bp.route("/all-days")
+@login_required
+def attendance_all_days():
+    """
+    Loads attendance from CSV and returns a CLEAN DATE MAP:
+        { "YYYY-MM-DD": {status, hours_worked} }
+
+    FIXES:
+    - Proper date parsing (no timezone shift)
+    - Ensures ISO format ALWAYS matches frontend
+    - Avoids missing / misaligned dates
+    """
+    import csv
+    import datetime
+
+    csv_path = "data/attendance/attendance_generated.csv"
+    records = {}
+
+    try:
+        with open(csv_path, "r") as f:
+            reader = csv.DictReader(f)
+
+            for row in reader:
+                raw = row["date"].strip()
+
+                # FIX: parse date AS LOCAL DATE ONLY (no timezone)
+                dt = datetime.datetime.strptime(raw, "%Y-%m-%d").date()
+                iso = dt.isoformat()     # ensures correct YYYY-MM-DD
+
+                att = int(row.get("attendance", 0))
+                dow = dt.weekday()       # FIX: compute weekday locally
+
+                # Interpret attendance
+                if dow >= 5:
+                    status = "weekend"
+                    hours = 0
+                else:
+                    if att == 1:
+                        status = "present"
+                        hours = 8
+                    elif att == 2:
+                        status = "half-day"
+                        hours = 4
+                    else:
+                        status = "absent"
+                        hours = 0
+
+                records[iso] = {
+                    "status": status,
+                    "hours_worked": hours
+                }
+
+        return jsonify({"success": True, "records": records})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
 
 
 @attendance_api_bp.route("/generate-sample-data")

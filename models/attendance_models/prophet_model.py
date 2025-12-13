@@ -74,28 +74,40 @@ class AttendanceProphet:
         try:
             # Create future dataframe
             future = self.model.make_future_dataframe(periods=days)
-            
+    
             # Add regressors if they were used during training
             if 'day_of_week' in df.columns:
                 future['day_of_week'] = future['ds'].dt.dayofweek
             
             # Make prediction
             forecast = self.model.predict(future)
+    
+            # ------------------------------
+            # FIX: filter ONLY the true future forecast days
+            # ------------------------------
+            last_date = df['date'].max().date()
+
+            # Fix timezone mismatch: compare ONLY dates
+            future_only = forecast[forecast['ds'].dt.date > last_date].head(days)
             
-            # Get the next 'days' predictions
-            future_predictions = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail(days)
-            
-            # Convert to probabilities (ensure between 0-1)
-            predictions = [max(0, min(1, pred)) for pred in future_predictions['yhat'].values]
-            
-            # Generate forecast plot
+            # If still fewer than needed, fallback to tail
+            if len(future_only) < days:
+                future_only = forecast.tail(days)
+
+
+    
+            # Convert to probabilities 0–1
+            predictions = [max(0, min(1, y)) for y in future_only['yhat'].values]
+    
+            # Forecast plot
             plot_base64 = self.generate_forecast_plot(forecast, df)
-            
+    
             return predictions, plot_base64
-            
+        
         except Exception as e:
             print(f"Error in Prophet prediction: {e}")
             return [0.8] * days, None
+
     
     def generate_forecast_plot(self, forecast, historical_df):
         """Generate forecast visualization as base64"""

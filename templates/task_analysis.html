@@ -904,612 +904,531 @@
     </div>
 
     <script>
-        // Task data model - Load from localStorage or initialize
-        let tasks = JSON.parse(localStorage.getItem('productiva_tasks')) || {
-            todo: [
-                {
-                    id: 1,
-                    title: 'Design new dashboard layout',
-                    description: 'Create wireframes for the productivity dashboard with glassmorphism effects',
-                    priority: 'high',
-                    dueDate: new Date().toISOString().split('T')[0],
-                    tags: ['design', 'ui'],
-                    assignee: 'YOU',
-                    aiInsight: 'Estimated: 3 hours. Consider mobile-first design for better responsiveness.'
-                },
-                // {
-                //     id: 2,
-                //     title: 'Research AI integration APIs',
-                //     description: 'Evaluate different AI services for productivity insights and recommendations',
-                //     priority: 'medium',
-                //     dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                //     tags: ['research', 'ai'],
-                //     assignee: 'AS',
-                //     aiInsight: 'Priority: Medium. Start with free tier APIs to test functionality.'
-                // }
-            ],
-            // inprogress: [
-            //     {
-            //         id: 3,
-            //         title: 'Implement drag-and-drop functionality',
-            //         description: 'Add smooth drag and drop for task management between columns',
-            //         priority: 'high',
-            //         dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            //         tags: ['development', 'feature'],
-            //         assignee: 'TM',
-            //         aiInsight: 'High priority. Blocking other frontend tasks. Estimated: 5 hours.'
-            //     }
-            // ],
-            // completed: [
-            //     {
-            //         id: 4,
-            //         title: 'Set up project repository',
-            //         description: 'Initialize Git repository and set up CI/CD pipeline',
-            //         priority: 'low',
-            //         dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            //         tags: ['setup', 'devops'],
-            //         assignee: 'RJ',
-            //         aiInsight: 'Completed ahead of schedule. Good work!'
-            //     }
-            // ]
+    // ------------------------------
+    // TASK STORAGE INIT
+    // ------------------------------
+    let tasks = JSON.parse(localStorage.getItem('productiva_tasks')) || {
+        todo: [
+            {
+                id: 1,
+                title: 'Design new dashboard layout',
+                description: 'Create wireframes for the productivity dashboard with glassmorphism effects',
+                priority: 'high',
+                dueDate: new Date().toISOString().split('T')[0],
+                tags: ['design', 'ui'],
+                assignee: 'YOU',
+                aiInsight: 'Estimated: 3 hours. Consider mobile-first design for better responsiveness.'
+            }
+        ],
+        inprogress: [],
+        completed: []
+    };
+
+    // ------------------------------
+    // SAVE TASKS → LocalStorage + Backend Sync
+    // ------------------------------
+    function saveTasks() {
+        localStorage.setItem('productiva_tasks', JSON.stringify(tasks));
+        updateProductivityData();
+    }
+
+    // ------------------------------
+    // PRODUCTIVITY & TASK SYNC (FIXED)
+    // ------------------------------
+    function updateProductivityData() {
+        const today = new Date().toISOString().split('T')[0];
+
+        const allTasks = getAllTasks();
+        const todayTasks = allTasks.filter(task => task.dueDate === today);
+        const completedToday = tasks.completed.filter(task => task.dueDate === today).length;
+
+        const productivityScore =
+            todayTasks.length > 0 ?
+                Math.round((completedToday / todayTasks.length) * 100)
+                : 0;
+
+        const productivityData = {
+            date: today,
+            score: productivityScore,
+            level: getProductivityLevel(productivityScore),
+            completed: completedToday,
+            total: todayTasks.length
         };
 
-        // Save tasks to localStorage
-        function saveTasks() {
-            localStorage.setItem('productiva_tasks', JSON.stringify(tasks));
-            updateProductivityData();
-        }
+        // SAVE LOCALLY
+        let productivityHistory = JSON.parse(localStorage.getItem('productivity_history')) || {};
+        productivityHistory[today] = productivityData;
+        localStorage.setItem('productivity_history', JSON.stringify(productivityHistory));
+        localStorage.setItem('current_productivity', JSON.stringify(productivityData));
 
-        // FIXED: Update productivity data for sync with other pages
-        function updateProductivityData() {
-            const today = new Date().toISOString().split('T')[0];
-            
-            // CORRECTED: Get ALL tasks due today (from all columns)
-            const todayTasks = getAllTasks().filter(task => task.dueDate === today);
-            
-            // CORRECTED: Count completed tasks for today (tasks in completed column with today's due date)
-            const completedToday = tasks.completed.filter(task => task.dueDate === today).length;
-            
-            const productivityScore = todayTasks.length > 0 ? 
-                Math.round((completedToday / todayTasks.length) * 100) : 0;
-            
-            const productivityData = {
+        // ------------------------------
+        // BACKEND UPDATE — PRODUCTIVITY
+        // ------------------------------
+        fetch("/api/update-productivity", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
                 date: today,
-                score: productivityScore,
-                level: getProductivityLevel(productivityScore),
+                completed: completedToday,
+                total: todayTasks.length,
+                score: productivityScore
+            })
+        })
+            .then(r => r.json())
+            .then(res => console.log("BACKEND UPDATED:", res))
+            .catch(err => console.error("BACKEND ERROR:", err));
+
+        // ------------------------------
+        // BACKEND UPDATE — TASK STATS
+        // ------------------------------
+        fetch("/api/update-tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
                 completed: completedToday,
                 total: todayTasks.length
-            };
-            
-            console.log('Productivity Data:', {
-                totalTasksToday: todayTasks.length,
-                completedToday: completedToday,
-                score: productivityScore,
-                todayTasks: todayTasks.map(t => ({ id: t.id, title: t.title, dueDate: t.dueDate })),
-                completedTasks: tasks.completed.filter(t => t.dueDate === today).map(t => ({ id: t.id, title: t.title }))
-            });
-            
-            // Save to localStorage for other pages to access
-            let productivityHistory = JSON.parse(localStorage.getItem('productivity_history')) || {};
-            productivityHistory[today] = productivityData;
-            localStorage.setItem('productivity_history', JSON.stringify(productivityHistory));
-            
-            // Also update current productivity state
-            localStorage.setItem('current_productivity', JSON.stringify(productivityData));
-            
-            fetch("/api/update-productivity", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    date: today,
-                    completed: completedToday,
-                    total: todayTasks.length,
-                    score: productivityScore
-                })
             })
-                .then(r => r.json())
-                .then(res => console.log("BACKEND UPDATED:", res))
-                .catch(err => console.error("BACKEND ERROR:", err));
+        })
+            .then(r => r.json())
+            .then(res => console.log("TASKS UPDATED:", res))
+            .catch(err => console.error("TASK BACKEND ERROR:", err));
+    }
 
-        }
+    // ------------------------------
+    // REDUNDANT FETCH REMOVED (Correct)
+    // ------------------------------
 
-        
+    function getProductivityLevel(score) {
+        if (score >= 80) return 'HIGH';
+        if (score >= 40) return 'MEDIUM';
+        return 'LOW';
+    }
 
-        function getProductivityLevel(score) {
-            if (score >= 80) return 'HIGH';
-            if (score >= 40) return 'MEDIUM';
-            return 'LOW';
-        }
+    function getAllTasks() {
+        return [...tasks.todo, ...tasks.inprogress, ...tasks.completed];
+    }
 
-        function getAllTasks() {
-            return [...tasks.todo, ...tasks.inprogress, ...tasks.completed];
-        }
+    function getTodayDate() {
+        return new Date().toISOString().split('T')[0];
+    }
 
-        // Helper function to get today's date in YYYY-MM-DD format
-        function getTodayDate() {
-            return new Date().toISOString().split('T')[0];
-        }
+    // ------------------------------
+    // UI ELEMENT REFERENCES
+    // ------------------------------
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    const addTaskModal = document.getElementById('addTaskModal');
+    const closeModal = document.getElementById('closeModal');
+    const cancelTask = document.getElementById('cancelTask');
+    const taskForm = document.getElementById('taskForm');
+    const contextMenu = document.getElementById('contextMenu');
+    const editTaskBtn = document.getElementById('editTask');
+    const deleteTaskBtn = document.getElementById('deleteTask');
 
-        // DOM Elements
-        const addTaskBtn = document.getElementById('addTaskBtn');
-        const addTaskModal = document.getElementById('addTaskModal');
-        const closeModal = document.getElementById('closeModal');
-        const cancelTask = document.getElementById('cancelTask');
-        const taskForm = document.getElementById('taskForm');
-        const contextMenu = document.getElementById('contextMenu');
-        const editTaskBtn = document.getElementById('editTask');
-        const deleteTaskBtn = document.getElementById('deleteTask');
-
-        // Initialize the board with tasks
-        function initializeBoard() {
-            // Set default due date to today when opening modal
-            addTaskBtn.addEventListener('click', () => {
-                document.getElementById('taskDueDate').value = getTodayDate();
-                addTaskModal.classList.add('show');
-            });
-
-            renderAllTasks();
-            updateProductivityOverview();
-            updateProductivityData(); // Initialize productivity data
-        }
-
-        // Render all tasks to the DOM
-        function renderAllTasks() {
-            // Clear all task containers
-            document.getElementById('todo-tasks').innerHTML = '';
-            document.getElementById('inprogress-tasks').innerHTML = '';
-            document.getElementById('completed-tasks').innerHTML = '';
-
-            // Render tasks for each column
-            for (const column in tasks) {
-                const container = document.getElementById(`${column}-tasks`);
-                tasks[column].forEach(task => {
-                    container.appendChild(createTaskCard(task, column));
-                });
-            }
-
-            // Update badge counts
-            updateBadgeCounts();
-        }
-
-        // Create a task card element
-        function createTaskCard(task, column) {
-            const taskCard = document.createElement('div');
-            taskCard.className = `task-card ${task.priority}`;
-            taskCard.draggable = true;
-            taskCard.dataset.taskId = task.id;
-            taskCard.dataset.column = column;
-
-            // Format due date
-            const dueDate = new Date(task.dueDate);
-            const formattedDate = dueDate.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric'
-            });
-
-            // Check if task is due today
-            const isDueToday = task.dueDate === getTodayDate();
-            const todayBadge = isDueToday ? '<span class="today-badge" style="background: #ff4444; color: white; padding: 2px 6px; border-radius: 8px; font-size: 0.7rem; margin-left: 5px;">Today</span>' : '';
-
-            taskCard.innerHTML = `
-                <div class="task-header">
-                    <div class="task-title">${task.title} ${todayBadge}</div>
-                    <div class="task-actions">
-                        <button class="task-action-btn ai-insight-btn" title="AI Insight">
-                            <i class="fas fa-lightbulb"></i>
-                        </button>
-                        <button class="task-action-btn context-menu-btn" title="More actions">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="task-description">${task.description}</div>
-                <div class="task-tags">
-                    ${task.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
-                </div>
-                <div class="ai-insight">
-                    <div class="ai-header">
-                        <i class="fas fa-robot"></i>
-                        <span>AI Insight</span>
-                    </div>
-                    ${task.aiInsight}
-                </div>
-                <div class="task-footer">
-                    <div class="task-due">
-                        <i class="far fa-calendar"></i>
-                        <span>${formattedDate}</span>
-                    </div>
-                    <div class="task-assignee">${task.assignee}</div>
-                </div>
-            `;
-
-            // Add event listeners
-            const aiInsightBtn = taskCard.querySelector('.ai-insight-btn');
-            const contextMenuBtn = taskCard.querySelector('.context-menu-btn');
-            const aiInsight = taskCard.querySelector('.ai-insight');
-
-            aiInsightBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                aiInsight.classList.toggle('show');
-            });
-
-            contextMenuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                showContextMenu(e, task, column);
-            });
-
-            // Drag and drop events
-            taskCard.addEventListener('dragstart', handleDragStart);
-            taskCard.addEventListener('dragend', handleDragEnd);
-
-            return taskCard;
-        }
-
-        // Show context menu
-        function showContextMenu(e, task, column) {
-            const rect = e.target.getBoundingClientRect();
-            contextMenu.style.top = `${rect.bottom + 5}px`;
-            contextMenu.style.left = `${rect.left}px`;
-            contextMenu.classList.add('show');
-
-            // Store current task info
-            contextMenu.dataset.taskId = task.id;
-            contextMenu.dataset.column = column;
-
-            // Close context menu when clicking elsewhere
-            document.addEventListener('click', closeContextMenu);
-        }
-
-        // Close context menu
-        function closeContextMenu() {
-            contextMenu.classList.remove('show');
-            document.removeEventListener('click', closeContextMenu);
-        }
-
-        // Drag and drop functionality
-        let draggedTask = null;
-        let draggedTaskElement = null;
-
-        function handleDragStart(e) {
-            draggedTaskElement = this;
-            this.classList.add('dragging');
-
-            // Store the task id and source column
-            e.dataTransfer.setData('text/plain', JSON.stringify({
-                taskId: this.dataset.taskId,
-                sourceColumn: this.dataset.column
-            }));
-
-            e.dataTransfer.effectAllowed = 'move';
-        }
-
-        function handleDragEnd() {
-            this.classList.remove('dragging');
-            draggedTaskElement = null;
-
-            // Remove drag over styles from all columns
-            document.querySelectorAll('.column').forEach(column => {
-                column.classList.remove('drag-over');
-            });
-        }
-
-        // Set up column drop zones
-        document.querySelectorAll('.column').forEach(column => {
-            column.addEventListener('dragover', function (e) {
-                e.preventDefault();
-                this.classList.add('drag-over');
-            });
-
-            column.addEventListener('dragenter', function (e) {
-                e.preventDefault();
-            });
-
-            column.addEventListener('dragleave', function () {
-                this.classList.remove('drag-over');
-            });
-
-            column.addEventListener('drop', function (e) {
-                e.preventDefault();
-                this.classList.remove('drag-over');
-
-                try {
-                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                    const taskId = parseInt(data.taskId);
-                    const sourceColumn = data.sourceColumn;
-                    const targetColumn = this.id.replace('-column', '');
-
-                    if (sourceColumn === targetColumn) return;
-
-                    // Find the task in the data model
-                    let task = null;
-                    const taskIndex = tasks[sourceColumn].findIndex(t => t.id === taskId);
-
-                    if (taskIndex !== -1) {
-                        task = tasks[sourceColumn][taskIndex];
-
-                        // Move task between columns
-                        tasks[sourceColumn].splice(taskIndex, 1);
-                        tasks[targetColumn].push(task);
-
-                        // Save to localStorage
-                        saveTasks();
-
-                        // Update the DOM
-                        const tasksContainer = this.querySelector('.tasks-container');
-
-                        // Remove from old column
-                        if (draggedTaskElement) {
-                            draggedTaskElement.remove();
-                        }
-
-                        // Add to new column with updated data attribute
-                        const newTaskCard = createTaskCard(task, targetColumn);
-                        tasksContainer.appendChild(newTaskCard);
-
-                        // Update all counts and analytics
-                        updateBadgeCounts();
-                        updateProductivityOverview();
-                    }
-                } catch (error) {
-                    console.error('Error during drag and drop:', error);
-                }
-            });
-        });
-
-        // Update column badge counts
-        function updateBadgeCounts() {
-            document.getElementById('todo-badge').textContent = tasks.todo.length;
-            document.getElementById('inprogress-badge').textContent = tasks.inprogress.length;
-            document.getElementById('completed-badge').textContent = tasks.completed.length;
-        }
-
-        // Update productivity overview with real data
-        function updateProductivityOverview() {
-            const totalTasks = tasks.todo.length + tasks.inprogress.length + tasks.completed.length;
-            const completedTasks = tasks.completed.length;
-            const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-            // Update completion stats
-            document.getElementById('completion-percent').textContent = `${completionPercentage}%`;
-            document.getElementById('completion-bar').style.width = `${completionPercentage}%`;
-
-            // Update task counts
-            document.getElementById('todo-count').textContent = tasks.todo.length;
-            document.getElementById('inprogress-count').textContent = tasks.inprogress.length;
-            document.getElementById('completed-count').textContent = tasks.completed.length;
-            document.getElementById('total-tasks').textContent = totalTasks;
-
-            // Count high priority tasks
-            const highPriorityCount = [...tasks.todo, ...tasks.inprogress].filter(task => task.priority === 'high').length;
-            document.getElementById('high-priority').textContent = highPriorityCount;
-
-            // Count tasks due this week
-            const today = new Date();
-            const nextWeek = new Date(today);
-            nextWeek.setDate(today.getDate() + 7);
-
-            const dueSoonCount = [...tasks.todo, ...tasks.inprogress].filter(task => {
-                const dueDate = new Date(task.dueDate);
-                return dueDate >= today && dueDate <= nextWeek;
-            }).length;
-
-            document.getElementById('due-soon').textContent = dueSoonCount;
-
-            // Update workload indicator
-            const workloadPercentage = Math.min(100, Math.round((tasks.inprogress.length / Math.max(1, totalTasks)) * 100 * 2));
-            document.getElementById('workload-bar').style.width = `${workloadPercentage}%`;
-
-            // Update workload status text
-            let workloadStatus = 'Balanced';
-            let statusColor = 'var(--accent-glow)';
-
-            if (workloadPercentage > 80) {
-                workloadStatus = 'Heavy';
-                statusColor = '#ff4444';
-            } else if (workloadPercentage > 60) {
-                workloadStatus = 'Moderate';
-                statusColor = '#ffaa00';
-            }
-
-            document.getElementById('workload-status').textContent = workloadStatus;
-            document.getElementById('workload-status').style.color = statusColor;
-
-            // Generate AI recommendation based on current state
-            let aiSuggestion = 'Add more tasks to get personalized insights';
-
-            if (totalTasks === 0) {
-                aiSuggestion = 'Start by adding your first task to the To Do column';
-            } else if (completionPercentage < 30) {
-                aiSuggestion = 'Focus on completing tasks to improve your completion rate';
-            } else if (completionPercentage > 70) {
-                aiSuggestion = 'Great progress! Consider adding more challenging tasks';
-            } else if (highPriorityCount > 3) {
-                aiSuggestion = 'You have several high-priority tasks. Focus on completing them first';
-            } else if (dueSoonCount > 0) {
-                aiSuggestion = `You have ${dueSoonCount} tasks due soon. Prioritize these to avoid delays`;
-            } else if (tasks.inprogress.length > 4) {
-                aiSuggestion = 'You have many tasks in progress. Consider focusing on fewer at a time';
-            }
-
-            document.getElementById('ai-suggestion-text').textContent = aiSuggestion;
-        }
-
-        // Modal functionality
+    // ------------------------------
+    // INITIALIZE BOARD
+    // ------------------------------
+    function initializeBoard() {
         addTaskBtn.addEventListener('click', () => {
+            document.getElementById('taskDueDate').value = getTodayDate();
             addTaskModal.classList.add('show');
         });
 
-        closeModal.addEventListener('click', () => {
-            addTaskModal.classList.remove('show');
+        renderAllTasks();
+        updateProductivityOverview();
+        updateProductivityData();
+    }
+
+    // ------------------------------
+    // RENDER TASKS
+    // ------------------------------
+    function renderAllTasks() {
+        document.getElementById('todo-tasks').innerHTML = '';
+        document.getElementById('inprogress-tasks').innerHTML = '';
+        document.getElementById('completed-tasks').innerHTML = '';
+
+        for (const column in tasks) {
+            const container = document.getElementById(`${column}-tasks`);
+            tasks[column].forEach(task => {
+                container.appendChild(createTaskCard(task, column));
+            });
+        }
+
+        updateBadgeCounts();
+    }
+
+    // ------------------------------
+    // CREATE TASK CARD
+    // ------------------------------
+    function createTaskCard(task, column) {
+        const taskCard = document.createElement('div');
+        taskCard.className = `task-card ${task.priority}`;
+        taskCard.draggable = true;
+        taskCard.dataset.taskId = task.id;
+        taskCard.dataset.column = column;
+
+        const dueDate = new Date(task.dueDate);
+        const formattedDate = dueDate.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
         });
 
-        cancelTask.addEventListener('click', () => {
-            addTaskModal.classList.remove('show');
+        const isDueToday = task.dueDate === getTodayDate();
+        const todayBadge = isDueToday ? '<span class="today-badge" style="background: #ff4444; color: white; padding: 2px 6px; border-radius: 8px; font-size: 0.7rem; margin-left: 5px;">Today</span>' : '';
+
+        taskCard.innerHTML = `
+            <div class="task-header">
+                <div class="task-title">${task.title} ${todayBadge}</div>
+                <div class="task-actions">
+                    <button class="task-action-btn ai-insight-btn">
+                        <i class="fas fa-lightbulb"></i>
+                    </button>
+                    <button class="task-action-btn context-menu-btn">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="task-description">${task.description}</div>
+            <div class="task-tags">
+                ${task.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}
+            </div>
+            <div class="ai-insight">
+                <div class="ai-header">
+                    <i class="fas fa-robot"></i>
+                    <span>AI Insight</span>
+                </div>
+                ${task.aiInsight}
+            </div>
+            <div class="task-footer">
+                <div class="task-due">
+                    <i class="far fa-calendar"></i>
+                    <span>${formattedDate}</span>
+                </div>
+                <div class="task-assignee">${task.assignee}</div>
+            </div>
+        `;
+
+        const aiBtn = taskCard.querySelector('.ai-insight-btn');
+        const menuBtn = taskCard.querySelector('.context-menu-btn');
+        const aiBox = taskCard.querySelector('.ai-insight');
+
+        aiBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            aiBox.classList.toggle('show');
         });
 
-        // Add new task
-        taskForm.addEventListener('submit', (e) => {
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showContextMenu(e, task, column);
+        });
+
+        taskCard.addEventListener('dragstart', handleDragStart);
+        taskCard.addEventListener('dragend', handleDragEnd);
+
+        return taskCard;
+    }
+
+    // ------------------------------
+    // CONTEXT MENU / DRAG DROP
+    // ------------------------------
+    function showContextMenu(e, task, column) {
+        const rect = e.target.getBoundingClientRect();
+        contextMenu.style.top = `${rect.bottom + 5}px`;
+        contextMenu.style.left = `${rect.left}px`;
+        contextMenu.classList.add('show');
+
+        contextMenu.dataset.taskId = task.id;
+        contextMenu.dataset.column = column;
+
+        document.addEventListener('click', closeContextMenu);
+    }
+
+    function closeContextMenu() {
+        contextMenu.classList.remove('show');
+        document.removeEventListener('click', closeContextMenu);
+    }
+
+    let draggedTaskElement = null;
+
+    function handleDragStart(e) {
+        draggedTaskElement = this;
+        this.classList.add('dragging');
+
+        e.dataTransfer.setData('text/plain', JSON.stringify({
+            taskId: this.dataset.taskId,
+            sourceColumn: this.dataset.column
+        }));
+
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd() {
+        this.classList.remove('dragging');
+        draggedTaskElement = null;
+
+        document.querySelectorAll('.column')
+            .forEach(col => col.classList.remove('drag-over'));
+    }
+
+    document.querySelectorAll('.column').forEach(column => {
+        column.addEventListener('dragover', e => {
             e.preventDefault();
+            column.classList.add('drag-over');
+        });
 
-            const title = document.getElementById('taskTitle').value;
-            const description = document.getElementById('taskDescription').value;
-            const priority = document.getElementById('taskPriority').value;
-            const dueDate = document.getElementById('taskDueDate').value;
-            const tags = document.getElementById('taskTags').value.split(',').map(tag => tag.trim());
+        column.addEventListener('dragleave', () => {
+            column.classList.remove('drag-over');
+        });
 
-            const newTask = {
-                id: Date.now(),
-                title,
-                description,
-                priority,
-                dueDate,
-                tags,
-                assignee: 'You',
-                aiInsight: generateAIInsight({ title, description, priority })
-            };
+        column.addEventListener('drop', e => {
+            e.preventDefault();
+            column.classList.remove('drag-over');
 
-            // Add to data model
-            tasks.todo.push(newTask);
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const taskId = parseInt(data.taskId);
+            const sourceColumn = data.sourceColumn;
+            const targetColumn = column.id.replace('-column', '');
 
-            // Save to localStorage
+            if (sourceColumn === targetColumn) return;
+
+            const taskIndex = tasks[sourceColumn].findIndex(t => t.id == taskId);
+            const task = tasks[sourceColumn][taskIndex];
+
+            tasks[sourceColumn].splice(taskIndex, 1);
+            tasks[targetColumn].push(task);
+
             saveTasks();
 
-            // Add to DOM
-            const todoTasks = document.getElementById('todo-tasks');
-            todoTasks.appendChild(createTaskCard(newTask, 'todo'));
+            draggedTaskElement.remove();
+            column.querySelector('.tasks-container')
+                .appendChild(createTaskCard(task, targetColumn));
 
-            // Update all counts and analytics
             updateBadgeCounts();
             updateProductivityOverview();
-
-            // Reset form and close modal
-            taskForm.reset();
-            addTaskModal.classList.remove('show');
         });
+    });
 
-        // Generate AI insight for a task
-        function generateAIInsight(task) {
-            const insights = [
-                `Estimated: ${Math.floor(Math.random() * 8) + 2} hours. ${task.priority === 'high' ? 'High priority task.' : 'Can be scheduled later.'}`,
-                `AI Tip: Break into smaller subtasks for better tracking and estimation.`,
-                `Urgency: ${task.priority === 'high' ? 'Critical' : task.priority === 'medium' ? 'Moderate' : 'Low'}. Focus on dependencies first.`,
-                `Suggested approach: Start with research and planning phase before implementation.`,
-                `Team workload: ${Math.random() > 0.5 ? 'Light' : 'Heavy'}. ${Math.random() > 0.5 ? 'Good time to tackle this task.' : 'Consider delegating or postponing.'}`
-            ];
+    // ------------------------------
+    // BADGE COUNTS
+    // ------------------------------
+    function updateBadgeCounts() {
+        document.getElementById('todo-badge').textContent = tasks.todo.length;
+        document.getElementById('inprogress-badge').textContent = tasks.inprogress.length;
+        document.getElementById('completed-badge').textContent = tasks.completed.length;
+    }
 
-            return insights[Math.floor(Math.random() * insights.length)];
+    // ------------------------------
+    // PRODUCTIVITY OVERVIEW (UI only)
+    // ------------------------------
+    function updateProductivityOverview() {
+        const totalTasks = tasks.todo.length + tasks.inprogress.length + tasks.completed.length;
+        const completedTasks = tasks.completed.length;
+        const completionPercentage =
+            totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+        document.getElementById('completion-percent').textContent = `${completionPercentage}%`;
+        document.getElementById('completion-bar').style.width = `${completionPercentage}%`;
+
+        document.getElementById('todo-count').textContent = tasks.todo.length;
+        document.getElementById('inprogress-count').textContent = tasks.inprogress.length;
+        document.getElementById('completed-count').textContent = tasks.completed.length;
+        document.getElementById('total-tasks').textContent = totalTasks;
+
+        const highPriorityCount =
+            [...tasks.todo, ...tasks.inprogress].filter(t => t.priority === 'high').length;
+
+        document.getElementById('high-priority').textContent = highPriorityCount;
+
+        const today = new Date();
+        const nextWeek = new Date(today);
+        nextWeek.setDate(today.getDate() + 7);
+
+        const dueSoonCount = [...tasks.todo, ...tasks.inprogress]
+            .filter(task => {
+                const due = new Date(task.dueDate);
+                return due >= today && due <= nextWeek;
+            }).length;
+
+        document.getElementById('due-soon').textContent = dueSoonCount;
+
+        const workloadPercentage =
+            Math.min(100, Math.round((tasks.inprogress.length / Math.max(1, totalTasks)) * 100 * 2));
+
+        document.getElementById('workload-bar').style.width = `${workloadPercentage}%`;
+
+        let workloadStatus = 'Balanced';
+        let statusColor = 'var(--accent-glow)';
+
+        if (workloadPercentage > 80) {
+            workloadStatus = 'Heavy';
+            statusColor = '#ff4444';
+        } else if (workloadPercentage > 60) {
+            workloadStatus = 'Moderate';
+            statusColor = '#ffaa00';
         }
 
-        // Context menu actions
-        editTaskBtn.addEventListener('click', () => {
-            const taskId = contextMenu.dataset.taskId;
-            const column = contextMenu.dataset.column;
-            // In a real app, we would open an edit modal here
-            alert(`Editing task ${taskId} from ${column}`);
-            closeContextMenu();
-        });
+        document.getElementById('workload-status').textContent = workloadStatus;
+        document.getElementById('workload-status').style.color = statusColor;
 
-        deleteTaskBtn.addEventListener('click', () => {
-            const taskId = contextMenu.dataset.taskId;
-            const column = contextMenu.dataset.column;
+        let aiSuggestion = 'Add more tasks to get personalized insights';
 
-            // Remove from data model
-            const taskIndex = tasks[column].findIndex(task => task.id == taskId);
-            if (taskIndex !== -1) {
-                tasks[column].splice(taskIndex, 1);
+        if (totalTasks === 0) aiSuggestion = 'Start by adding your first task';
+        else if (completionPercentage < 30) aiSuggestion = 'Focus on completing tasks';
+        else if (completionPercentage > 70) aiSuggestion = 'Great job! Add more challenges';
+        else if (highPriorityCount > 3) aiSuggestion = 'Prioritize high-priority tasks';
+        else if (dueSoonCount > 0) aiSuggestion = `You have ${dueSoonCount} tasks due soon`;
+        else if (tasks.inprogress.length > 4) aiSuggestion = 'Focus on fewer tasks at a time';
 
-                // Save to localStorage
-                saveTasks();
+        document.getElementById('ai-suggestion-text').textContent = aiSuggestion;
+    }
 
-                // Remove from DOM
-                const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
-                if (taskElement) {
-                    taskElement.remove();
-                }
+    // ------------------------------
+    // ADD TASK MODAL
+    // ------------------------------
+    addTaskBtn.addEventListener('click', () => {
+        addTaskModal.classList.add('show');
+    });
 
-                // Update all counts and analytics
-                updateBadgeCounts();
-                updateProductivityOverview();
-            }
+    closeModal.addEventListener('click', () => addTaskModal.classList.remove('show'));
+    cancelTask.addEventListener('click', () => addTaskModal.classList.remove('show'));
 
-            closeContextMenu();
-        });
+    taskForm.addEventListener('submit', e => {
+        e.preventDefault();
 
+        const title = document.getElementById('taskTitle').value;
+        const description = document.getElementById('taskDescription').value;
+        const priority = document.getElementById('taskPriority').value;
+        const dueDate = document.getElementById('taskDueDate').value;
+        const tags = document.getElementById('taskTags').value.split(',').map(t => t.trim());
 
+        const newTask = {
+            id: Date.now(),
+            title,
+            description,
+            priority,
+            dueDate,
+            tags,
+            assignee: 'You',
+            aiInsight: generateAIInsight({ title, description, priority })
+        };
 
-        // Initialize the board when page loads
-        document.addEventListener('DOMContentLoaded', initializeBoard);
+        tasks.todo.push(newTask);
+        saveTasks();
 
-        const dropdown = document.getElementById("priorityDropdown");
-        const selected = dropdown.querySelector(".dropdown-selected");
-        const menu = dropdown.querySelector(".dropdown-menu");
+        document.getElementById('todo-tasks')
+            .appendChild(createTaskCard(newTask, 'todo'));
 
-        dropdown.addEventListener("click", () => {
-            menu.classList.toggle("show");
-        });
+        updateBadgeCounts();
+        updateProductivityOverview();
 
-        // Handle selection
-        menu.querySelectorAll(".dropdown-item").forEach(item => {
-            item.addEventListener("click", (e) => {
-                const value = e.target.dataset.value;
-                selected.textContent = e.target.textContent;
+        taskForm.reset();
+        addTaskModal.classList.remove('show');
+    });
 
-                menu.classList.remove("show");
+    function generateAIInsight(task) {
+        const insights = [
+            `Estimated: ${Math.floor(Math.random() * 8) + 2} hours.`,
+            `AI Tip: Break into smaller subtasks.`,
+            `Urgency: ${task.priority === 'high' ? 'Critical' : task.priority}.`,
+            `Plan research first.`,
+            `Team load fluctuating — adjust accordingly.`
+        ];
+        return insights[Math.floor(Math.random() * insights.length)];
+    }
 
-                filterTasksByPriority(value);
-            });
-        });
+    // ------------------------------
+    // CONTEXT MENU ACTIONS
+    // ------------------------------
+    editTaskBtn.addEventListener('click', () => {
+        alert(`Edit Task ${contextMenu.dataset.taskId}`);
+        closeContextMenu();
+    });
 
-        // Hide on outside click
-        document.addEventListener("click", (e) => {
-            if (!dropdown.contains(e.target)) {
-                menu.classList.remove("show");
-            }
-        });
+    deleteTaskBtn.addEventListener('click', () => {
+        const taskId = contextMenu.dataset.taskId;
+        const column = contextMenu.dataset.column;
 
-        const searchInput = document.querySelector(".search-box input");
+        const idx = tasks[column].findIndex(t => t.id == taskId);
+        if (idx !== -1) {
+            tasks[column].splice(idx, 1);
+            saveTasks();
 
-        searchInput.addEventListener("input", function () {
-            const query = this.value.toLowerCase();
+            const el = document.querySelector(`[data-task-id="${taskId}"]`);
+            if (el) el.remove();
 
-            const cards = document.querySelectorAll(".task-card");
-
-            cards.forEach(card => {
-                const title = card.querySelector(".task-title").textContent.toLowerCase();
-                const description = card.querySelector(".task-description").textContent.toLowerCase();
-                const tags = card.querySelector(".task-tags").textContent.toLowerCase();
-                const assignee = card.querySelector(".task-assignee").textContent.toLowerCase(); // NEW
-
-                const match =
-                    title.includes(query) ||
-                    description.includes(query) ||
-                    tags.includes(query) ||
-                    assignee.includes(query); // NEW
-
-                card.style.display = match ? "block" : "none";
-            });
-        });
-
-        function filterTasksByPriority(priority) {
-            const cards = document.querySelectorAll(".task-card");
-
-            cards.forEach(card => {
-                const cardPriority =
-                    card.classList.contains("high")
-                        ? "high"
-                        : card.classList.contains("medium")
-                            ? "medium"
-                            : "low";
-
-                if (priority === "all" || cardPriority === priority) {
-                    card.style.display = "block";
-                } else {
-                    card.style.display = "none";
-                }
-            });
-            
+            updateBadgeCounts();
+            updateProductivityOverview();
         }
-    </script>
+
+        closeContextMenu();
+    });
+
+    // ------------------------------
+    // BOARD INIT
+    // ------------------------------
+    document.addEventListener('DOMContentLoaded', initializeBoard);
+
+    // ------------------------------
+    // DROPDOWN FILTER (NO CHANGES)
+    // ------------------------------
+    const dropdown = document.getElementById("priorityDropdown");
+    const selected = dropdown.querySelector(".dropdown-selected");
+    const menu = dropdown.querySelector(".dropdown-menu");
+
+    dropdown.addEventListener("click", () => {
+        menu.classList.toggle("show");
+    });
+
+    menu.querySelectorAll(".dropdown-item").forEach(item => {
+        item.addEventListener("click", e => {
+            const value = e.target.dataset.value;
+            selected.textContent = e.target.textContent;
+            menu.classList.remove("show");
+            filterTasksByPriority(value);
+        });
+    });
+
+    document.addEventListener("click", e => {
+        if (!dropdown.contains(e.target)) {
+            menu.classList.remove("show");
+        }
+    });
+
+    // ------------------------------
+    // SEARCH FILTER (NO CHANGES)
+    // ------------------------------
+    const searchInput = document.querySelector(".search-box input");
+
+    searchInput.addEventListener("input", function () {
+        const query = this.value.toLowerCase();
+
+        document.querySelectorAll(".task-card").forEach(card => {
+            const title = card.querySelector(".task-title").textContent.toLowerCase();
+            const description = card.querySelector(".task-description").textContent.toLowerCase();
+            const tags = card.querySelector(".task-tags").textContent.toLowerCase();
+            const assignee = card.querySelector(".task-assignee").textContent.toLowerCase();
+
+            const match =
+                title.includes(query) ||
+                description.includes(query) ||
+                tags.includes(query) ||
+                assignee.includes(query);
+
+            card.style.display = match ? "block" : "none";
+        });
+    });
+
+    function filterTasksByPriority(priority) {
+        document.querySelectorAll(".task-card").forEach(card => {
+            const p =
+                card.classList.contains("high") ? "high" :
+                card.classList.contains("medium") ? "medium" : "low";
+
+            card.style.display =
+                (priority === "all" || p === priority) ? "block" : "none";
+        });
+    }
+</script>
+
 </body>
 
 </html>

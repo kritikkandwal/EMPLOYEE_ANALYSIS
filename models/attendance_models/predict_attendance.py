@@ -7,27 +7,47 @@ from .prophet_model import AttendanceProphet
 from .lstm_model import AttendanceLSTM
 
 class AttendancePredictor:
-    def __init__(self, data_path='data/attendance/attendance.csv'):
+    def __init__(self, data_path='data/attendance/attendance_generated.csv'):
         self.data_path = data_path
         self.lr_model = AttendanceLinearRegression()
         self.prophet_model = AttendanceProphet()
         self.lstm_model = AttendanceLSTM()
-        
+
         # Ensure data directory exists
         os.makedirs(os.path.dirname(data_path), exist_ok=True)
-        
+
     def load_data(self):
-        """Load attendance data from CSV"""
+        """Load REAL attendance data from your generated CSV."""
         try:
             if os.path.exists(self.data_path):
                 df = pd.read_csv(self.data_path)
+
                 df['date'] = pd.to_datetime(df['date'])
+                df = df.sort_values('date')
+
+                # attendance: 1 = present, 2 = half-day, 0 = absent
+                def convert(att):
+                    if att == 1:
+                        return 1.0
+                    elif att == 2:
+                        return 0.5
+                    return 0.0
+
+                df['attendance'] = df['attendance'].apply(convert)
+                df['day_of_week'] = df['date'].dt.weekday
+                df['month'] = df['date'].dt.month
                 return df
-            else:
-                return self.create_sample_data()
-        except Exception as e:
-            print(f"Error loading data: {e}")
+
+            print("CSV not found — generating sample data")
             return self.create_sample_data()
+
+        except Exception as e:
+            print("Error loading CSV:", e)
+            return self.create_sample_data()
+
+
+
+
     
     def create_sample_data(self):
         """Create sample data if CSV doesn't exist"""
@@ -156,6 +176,46 @@ class AttendancePredictor:
         avg_pred = (lr_pred + lstm_pred + prophet_pred) / 3
         absence_likelihood = 1 - avg_pred  # Convert to absence probability
         return absence_likelihood
+    
+    def update_today_attendance(self, status, hours):
+        """
+        Update today's attendance both in CSV and cache.
+        status: 'present' | 'half-day' | 'absent'
+        hours: numeric (0–8)
+        """
+        from .attendance_cache import set_day
+    
+        # Load current CSV
+        df = pd.read_csv(self.data_path)
+        df['date'] = pd.to_datetime(df['date'])
+    
+        today = datetime.now().date()
+    
+        # Find row for today
+        if today in df['date'].dt.date.values:
+            idx = df.index[df['date'].dt.date == today][0]
+        else:
+            # If missing, append new row
+            idx = len(df)
+            df.loc[idx, 'date'] = today
+    
+        # Convert status → CSV numeric format
+        if status == "present":
+            att_value = 1
+        elif status == "half-day":
+            att_value = 2
+        else:
+            att_value = 0
+    
+        # Update CSV row
+        df.loc[idx, 'attendance'] = att_value
+        df.to_csv(self.data_path, index=False)
+    
+        # Update local cache as well
+        set_day("default_user", today, status, hours)
+    
+        return {"date": str(today), "attendance": status, "hours": hours}
+
 
 # Global predictor instance
 predictor = AttendancePredictor()

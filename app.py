@@ -209,6 +209,16 @@ def time_tracking():
     return render_template('time_tracking.html')
 
 
+@app.route("/punch-today", methods=["POST"])
+def punch_today():
+    data = request.json
+    status = data["status"]
+    hours = data["hours"]
+
+    result = predictor.update_today_attendance(status, hours)
+    return jsonify({"success": True, "updated": result})
+
+
 # --------------------------------------------------------
 # ----------- NEW ML PRODUCTIVITY SYSTEM ROUTES ----------
 # --------------------------------------------------------

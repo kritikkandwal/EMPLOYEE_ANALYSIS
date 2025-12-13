@@ -1,12 +1,16 @@
 import os, json, threading
 from flask import Blueprint, jsonify, request
 from flask_login import login_required
+from flask import Blueprint, jsonify, request
+from analytics_store import update_whole_section
+from ml_models.productivity_forecaster import ProductivityForecaster
+from flask import request
 
 predictions_bp = Blueprint("predictions_bp", __name__)
-
+productivity_bp = Blueprint("productivity", __name__, url_prefix="/api/productivity")
 PREDICTION_DIR = "data/predictions"
 PREDICTION_FILE = f"{PREDICTION_DIR}/prediction_store.json"
-
+forecaster = ProductivityForecaster()
 DEFAULT_TEMPLATE = {
     "date": None,
     "attendance": {
@@ -95,3 +99,88 @@ def api_update():
 
     updated = update_section(section, key, value)
     return jsonify({"success": True, "data": updated})
+
+# =====================================================================
+#   PRODUCTIVITY PREDICTION ENDPOINT
+# =====================================================================
+@productivity_bp.route("/predict", methods=["GET"])
+def predict_productivity():
+    """
+    1. Runs ML prediction from ProductivityForecaster
+    2. Maps result → analytics_store.json (score_today, prediction, trend)
+    3. Returns full detailed AI prediction to frontend
+    """
+
+    # --- (A) INPUTS (optional from frontend) ---
+    user_id = 1  # You can make this dynamic later
+    today_score = request.args.get("today_score", type=float)
+    completed = request.args.get("completed", type=int)
+    total = request.args.get("total", type=int)
+
+    # --- (B) RUN YOUR MAIN ML MODEL ---
+    result = forecaster.get_prediction_summary(
+        user_id=user_id,
+        today_score=today_score,
+        completed=completed,
+        total=total
+    )
+
+    # ----------------------------------------------------
+    # SAVE INTO analytics_store.json
+    # ----------------------------------------------------
+    def level(score):
+        if score is None:
+            return "unknown"
+        s = int(score)
+        if s >= 80:
+            return "high"
+        elif s >= 50:
+            return "medium"
+        else:
+            return "low"
+
+    productivity_section = {
+        "score_today": int(result["tomorrow_score"]) if result["tomorrow_score"] is not None else 0,
+        "prediction": level(result["tomorrow_score"]),
+        "trend": result.get("next_7_days", [])
+    }
+
+    update_whole_section("productivity", productivity_section)
+
+
+    
+
+    # --- (E) RETURN FULL RESULT TO FRONTEND ---
+    return jsonify({
+        "success": True,
+        "predictions": result
+    })
+    
+# =====================================================================
+#   UPDATE TASKS → Save into analytics_store.json
+# =====================================================================
+
+@predictions_bp.route("/api/update-tasks", methods=["POST"])
+def update_tasks():
+    """
+    Receives: { completed: int, total: int }
+    Saves into analytics_store.json
+    """
+    data = request.get_json(force=True, silent=True) or {}
+    completed = data.get("completed", 0)
+    total = data.get("total", 0)
+    ratio = round(completed / total, 3) if total > 0 else 0.0
+    # Predict status
+    if ratio >= 0.8:
+        status = "on-track"
+    elif ratio >= 0.5:
+        status = "slightly-behind"
+    else:
+        status = "behind"
+    update_whole_section("tasks", {
+        "completed_today": completed,
+        "total_today": total,
+        "completion_ratio": ratio,
+        "task_prediction": status
+    })
+    return {"success": True, "saved": True}

@@ -1470,5 +1470,17 @@
   "2025-12-07": {
     "status": "present",
     "hours": 0
+  },
+  "2025-12-08": {
+    "status": "present",
+    "hours": 0
+  },
+  "2025-12-12": {
+    "status": "present",
+    "hours": 0
+  },
+  "2025-12-13": {
+    "status": "absent",
+    "hours": 0.19
   }
 }

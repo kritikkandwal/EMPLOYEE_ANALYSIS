@@ -301,7 +301,8 @@ class AttendanceManager {
                 }
             } catch (e) { }
 
-            let recMap = this._buildRandomAttendanceMap(startDate, endDate, todayIsoForRandom, todayRealRecord);
+            let recMap = await this._buildAttendanceMapFromCSV(startDate, endDate, todayIsoForRandom, todayRealRecord);
+
 
             const container = document.getElementById("attendanceCalendar");
             if (!container) return;
@@ -370,22 +371,40 @@ class AttendanceManager {
                     cell.className = "day-cell";
 
                     const entry = recMap[iso];
-                    const isWeekend = dateObj.getDay() >= 5;
+                    const isWeekend = entry && entry.status === "weekend";
+
 
                     let cls = "absent";
 
                     if (entry) {
-                        if (entry.status === "present") {
-                            const h = Number(entry.hours_worked);
-                            if (h >= 8) cls = "present";
-                            else if (h >= 6) cls = "present-2";
-                            else cls = "present-1";
-                        } else if (entry.status === "half-day") {
-                            cls = "half-day";
+                        switch (entry.status) {
+                            case "present":
+                                const h = Number(entry.hours_worked);
+                                if (h >= 8) cls = "present";
+                                else if (h >= 6) cls = "present-2";
+                                else cls = "present-1";
+                                break;
+
+                            case "half-day":
+                                cls = "half-day";
+                                break;
+
+                            case "weekend":
+                                cls = "weekend";
+                                break;
+
+                            case "absent":
+                                cls = "absent";
+                                break;
+
+                            default:
+                                cls = "absent";
                         }
-                    } else if (isWeekend) {
+                    } else if (entry?.status === "weekend") {
                         cls = "weekend";
                     }
+
+
 
                     // highlight *local* today
                     if (iso === todayIso) {
@@ -472,50 +491,6 @@ class AttendanceManager {
         return Promise.all(promises);
     }
 
-    /* STEP 1 — Replace _buildDateMapFromMonths() with RANDOM generation */
-    _buildRandomAttendanceMap(startDate, endDate, todayIso, todayRealRecord) {
-        const map = {};
-        const cursor = new Date(startDate);
-
-        while (cursor <= endDate) {
-            const iso = cursor.toISOString().slice(0, 10);
-            const day = cursor.getDay();
-
-            // Weekend
-            if (day === 1 || day === 0) {
-                map[iso] = { status: "weekend", hours_worked: 0 };
-            }
-            // Today = REAL DATA
-            else if (iso === todayIso) {
-                map[iso] = todayRealRecord || { status: "absent", hours_worked: 0 };
-            }
-            // Past days = RANDOM
-            else if (cursor < new Date(todayIso)) {
-                const r = Math.random();
-
-                if (r < 0.1) {
-                    map[iso] = { status: "absent", hours_worked: 0 };
-                } else if (r < 0.2) {
-                    map[iso] = { status: "half-day", hours_worked: 4 };
-                } else {
-                    // present (random hours)
-                    const h = Math.floor(4 + Math.random() * 5); // 4–8 hours
-                    map[iso] = { status: "present", hours_worked: h };
-                }
-            }
-            // Future days = no data
-            else {
-                map[iso] = { status: "no-data", hours_worked: 0 };
-            }
-
-            cursor.setDate(cursor.getDate() + 1);
-        }
-
-        return map;
-    }
-
-
-
     async loadMonthlyStats(year, month) {
         try {
             const res = await fetch(`/api/attendance/monthly?year=${year}&month=${month}`);
@@ -546,6 +521,61 @@ class AttendanceManager {
             console.error("Monthly Stats Error:", err);
         }
     }
+
+    async _buildAttendanceMapFromCSV(startDate, endDate, todayIso, todayRealRecord) {
+        let csv = {};
+        
+        try {
+            const res = await fetch("/api/attendance/all-days");
+            const data = await res.json();
+            if (data.success) csv = data.records;
+        } catch (e) {
+            console.error("CSV load error:", e);
+        }
+    
+        const map = {};
+        const cursor = new Date(startDate);
+    
+        while (cursor <= endDate) {
+        
+            const iso =
+                cursor.getFullYear() +
+                "-" +
+                String(cursor.getMonth() + 1).padStart(2, "0") +
+                "-" +
+                String(cursor.getDate()).padStart(2, "0");
+        
+            const dow = cursor.getDay();
+        
+            // 1️⃣ Load CSV if exists
+            if (csv[iso]) {
+                map[iso] = {
+                    status: csv[iso].status,
+                    hours_worked: csv[iso].hours_worked
+                };
+            }
+            // 2️⃣ Fallback: weekend/absent
+            else {
+                map[iso] = {
+                    status: (dow === 0 || dow === 6) ? "weekend" : "absent",
+                    hours_worked: 0
+                };
+            }
+        
+            // 3️⃣ Today overrides CSV
+            if (iso === todayIso && todayRealRecord) {
+                map[iso] = {
+                    status: todayRealRecord.status,
+                    hours_worked: todayRealRecord.hours_worked
+                };
+            }
+        
+            cursor.setDate(cursor.getDate() + 1);
+        }
+    
+        return map;
+    }
+
 
 
 
