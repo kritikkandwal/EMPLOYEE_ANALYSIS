@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, date
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from utils.dashboard_data_loader import load_dashboard_data
 import pandas as pd
 import os
 
@@ -388,7 +388,12 @@ from routes.predictions_api import predictions_bp, productivity_bp
 app.register_blueprint(predictions_bp)
 app.register_blueprint(productivity_bp)
 
+#for dashboard
 
+@app.route('/api/dashboard-data')
+@login_required
+def dashboard_data():
+    return jsonify(load_dashboard_data())
 
 @app.route('/api/update-productivity', methods=['POST'])
 @login_required

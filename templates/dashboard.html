@@ -1,136 +1,787 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Productivity Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <script type="module" src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.module.js"></script>
-    <script src="/static/js/advanced_prediction.js"></script>
+{% block title %}HR Analytics Dashboard{% endblock %}
 
-</head>
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<body class="futuristic-theme">
-    <div id="three-background" class="three-background"></div>
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --success-color: #2ecc71;
+        --warning-color: #f39c12;
+        --danger-color: #e74c3c;
+        --light-color: #ecf0f1;
+        --dark-color: #2c3e50;
+        --border-radius: 10px;
+        --box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+    }
 
-    <div class="dashboard-container">
-        {% include 'components/sidebar.html' %}
+    /* ===== MAIN DASHBOARD STRUCTURE ===== */
+    .dashboard-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+        width: 100%;
+        max-width: 1800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
 
-        <main class="main-content">
-            {% include 'components/navbar.html' %}
+    /* ===== ROW STRUCTURE ===== */
+    .dashboard-row {
+        display: grid;
+        gap: 25px;
+        margin-bottom: 25px;
+    }
 
-            <div class="dashboard-grid">
+    .row-full {
+        grid-template-columns: 1fr;
+    }
 
-                <!-- Productivity Overview -->
-                <div class="glass-card overview-card">
-                    <h2 class="card-title">Productivity Overview</h2>
-                    <div class="productivity-gauge">
-                        <div class="gauge">
-                            <div class="gauge-fill"></div>
-                            <div class="gauge-cover">
-                                <span class="gauge-score">{{ metrics.productivity_score or 0 }}</span>
-                                <span class="gauge-label">Current Score</span>
-                            </div>
-                        </div>
-                        <div class="metric-stats">
-                            <div class="metric">
-                                <span class="metric-value">{{ (metrics.focus_ratio * 100) if metrics else 0 }}%</span>
-                                <span class="metric-label">Focus Ratio</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">{{ metrics.task_efficiency if metrics else 0 }}%</span>
-                                <span class="metric-label">Task Efficiency</span>
-                            </div>
-                            <div class="metric">
-                                <span
-                                    class="metric-value {% if metrics and metrics.weekly_trend > 0 %}positive{% else %}negative{% endif %}">
-                                    {{ metrics.weekly_trend if metrics else 0 }}%
-                                </span>
-                                <span class="metric-label">Weekly Trend</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    .row-split {
+        grid-template-columns: 1fr 1fr;
+    }
 
-                <!-- AI Insights -->
-                <div class="glass-card insights-card">
-                    <h2 class="card-title">AI Insights</h2>
-                    <div class="insights-content">
-                        <div class="insight-item">
-                            <div class="insight-icon">🧠</div>
-                            <div class="insight-text">
-                                <h4>Today's Analysis</h4>
-                                <p>{{ insights.today_insight or "No data available" }}</p>
-                            </div>
-                        </div>
-                        <div class="insight-item">
-                            <div class="insight-icon">🔮</div>
-                            <div class="insight-text">
-                                <h4>Tomorrow's Forecast</h4>
-                                <p>{{ insights.tomorrow_prediction or "No data available" }}</p>
-                            </div>
-                        </div>
-                        <div class="insight-item">
-                            <div class="insight-icon">💡</div>
-                            <div class="insight-text">
-                                <h4>Recommendation</h4>
-                                <p>{{ insights.recommendation or "No data available" }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    @media (max-width: 1200px) {
+        .row-split {
+            grid-template-columns: 1fr;
+        }
+    }
 
-                <!-- Charts -->
-                <div class="glass-card chart-card">
-                    <h2 class="card-title">Productivity Trend</h2>
-                    <div class="chart-container"><canvas id="productivityChart"></canvas></div>
-                </div>
+    /* ===== KPI ROW (4 cards) ===== */
+    .kpi-row {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
 
-                <div class="glass-card chart-card">
-                    <h2 class="card-title">Focus Distribution</h2>
-                    <div class="chart-container"><canvas id="focusChart"></canvas></div>
-                </div>
+    @media (max-width: 1400px) {
+        .kpi-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
 
-                <!-- Badges -->
-                <div class="glass-card badges-card">
-                    <h2 class="card-title">Your Badges</h2>
-                    <div class="badges-grid">
-                        {% if badges and badges|length > 0 %}
-                        {% for badge in badges %}
-                        <div class="badge-item {{ badge.level }}">
-                            <div class="badge-icon">🏆</div>
-                            <div class="badge-info">
-                                <h4>{{ badge.name }}</h4>
-                                <p>{{ badge.description }}</p>
-                            </div>
-                            <span class="badge-level">{{ badge.level }}</span>
-                        </div>
-                        {% endfor %}
-                        {% else %}
-                        <div class="no-badges">
-                            <p>Complete more tasks to earn badges!</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
+    @media (max-width: 768px) {
+        .kpi-row {
+            grid-template-columns: 1fr;
+        }
+    }
 
-                <!-- Radar Chart -->
-                <div class="glass-card chart-card">
-                    <h2 class="card-title">Performance Analysis</h2>
-                    <div class="chart-container"><canvas id="skillsRadarChart"></canvas></div>
+    /* ===== KPI CARDS ===== */
+    .kpi-card {
+        background: #1e1f23;
+        color: #eaeaea;
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+        height: 100%;
+        min-height: 120px;
+        position: relative;
+        transition: var(--transition);
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .kpi-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--card-color, var(--accent-color));
+    }
+
+    .kpi-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+        background: var(--card-color, var(--accent-color));
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        flex-shrink: 0;
+    }
+
+    .kpi-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .kpi-content h3 {
+        font-size: 14px;
+        color: #9aa4af;
+        margin-bottom: 8px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .kpi-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .kpi-card {
+        min-width: 0;
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .kpi-icon {
+        width: 52px;
+        height: 52px;
+        font-size: 22px;
+    }
+
+    .kpi-value {
+        font-size: clamp(22px, 2vw, 28px);
+        white-space: nowrap;
+    }
+
+    .kpi-unit {
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 4px;
+        line-height: 1;
+        color: #eaeaea;
+    }
+
+    .kpi-unit {
+        font-size: 13px;
+        color: #9aa4af;
+        font-weight: 500;
+    }
+
+    .formula-tooltip {
+        position: absolute;
+        top: 6px;
+        right: 1px;
+        background: #2d3748;
+        border: 1px solid #4a5568;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: help;
+        font-size: 12px;
+        color: #cbd5e0;
+        transition: var(--transition);
+        z-index: 10;
+    }
+
+    .formula-tooltip:hover {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    /* ===== CHART CARDS ===== */
+    .chart-card {
+        background: #1e1f23;
+        border-radius: 14px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: var(--transition);
+    }
+
+    .chart-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #2d3748;
+        flex-shrink: 0;
+    }
+
+    .chart-title-wrapper {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .chart-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #eaeaea;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 5px;
+    }
+
+    .chart-title i {
+        color: var(--accent-color);
+        font-size: 16px;
+    }
+
+    .chart-subtitle {
+        font-size: 13px;
+        color: #9aa4af;
+        font-weight: 400;
+        line-height: 1.4;
+    }
+
+    .chart-legend {
+        display: flex;
+        gap: 15px;
+        flex-shrink: 0;
+        margin-left: 20px;
+    }
+
+    .legend-item {
+        font-size: 13px;
+        color: #9aa4af;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .legend-item i {
+        font-size: 12px;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 280px;
+        /* FIXED height */
+        max-height: 280px;
+        min-height: 280px;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .chart-container canvas {
+        width: 100% !important;
+        height: auto !important;
+        display: block;
+    }
+
+    .chart-card {
+        height: auto;
+        align-self: stretch;
+    }
+
+
+    /* ===== CORRELATION INSIGHT ===== */
+    .correlation-insight {
+        background: linear-gradient(135deg, #2d3748, #1a202c);
+        border-left: 4px solid var(--accent-color);
+        padding: 15px;
+        margin-top: 15px;
+        border-radius: 0 8px 8px 0;
+        font-size: 13px;
+        color: #cbd5e0;
+        line-height: 1.5;
+        flex-shrink: 0;
+    }
+
+    .correlation-insight strong {
+        color: #eaeaea;
+        font-weight: 600;
+    }
+
+    /* ===== FORMULA MODAL ===== */
+    .formula-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .formula-content {
+        background: #1e1f23;
+        padding: 30px;
+        border-radius: var(--border-radius);
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        color: #eaeaea;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .formula-detail {
+        margin-bottom: 20px;
+    }
+
+    .formula-detail h4 {
+        color: var(--accent-color);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 16px;
+    }
+
+    .formula-text {
+        background: #2d3748;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: 'Courier New', monospace;
+        margin: 10px 0;
+        border-left: 3px solid var(--accent-color);
+        color: #eaeaea;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .formula-note {
+        font-size: 12px;
+        color: #9aa4af;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    /* ===== DASHBOARD FOOTER ===== */
+    .dashboard-footer {
+        text-align: center;
+        padding: 20px;
+        color: #9aa4af;
+        font-size: 14px;
+        margin-top: 30px;
+        border-top: 1px solid #2d3748;
+        background: #1e1f23;
+        border-radius: var(--border-radius);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .footer-highlight {
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+
+    /* ===== LOADING SPINNER ===== */
+    .spinner {
+        display: none;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        border-top: 4px solid var(--accent-color);
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 50px auto;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* ===== ERROR MESSAGE ===== */
+    .error-message {
+        display: none;
+        background: #442f32;
+        color: #f8d7da;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+        border-left: 4px solid #e74c3c;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* ===== RESPONSIVE ADJUSTMENTS ===== */
+    @media (max-width: 1400px) {
+        .kpi-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .row-split {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            padding: 15px;
+        }
+
+        .kpi-row {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-header {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chart-legend {
+            margin-left: 0;
+            align-self: flex-start;
+        }
+
+        .chart-container {
+            min-height: 250px;
+        }
+    }
+
+    /* ===== UTILITY CLASSES ===== */
+    .full-width {
+        grid-column: 1 / -1;
+    }
+
+    .chart-card.full-width {
+        grid-column: 1 / -1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <!-- Error Message Display -->
+    <div id="dashboard-error" class="error-message" style="display: none;">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>Error loading dashboard data. Please refresh the page.</span>
+    </div>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- ROW 1: KPI CARDS (4 KPIs) -->
+    <!-- ------------------------------------------------------- -->
+    <div class="dashboard-row kpi-row">
+        <!-- KPI 1: Monthly Attendance % -->
+        <div class="kpi-card" style="--card-color: #3498db;">
+            <div class="kpi-icon">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="kpi-content">
+                <h3>Monthly Attendance %</h3>
+                <div class="kpi-value" id="kpi-attendance">--</div>
+                <div class="kpi-unit">Present/Working Days × 100</div>
+                <div class="formula-tooltip" data-formula="Present Days / Working Days × 100">?</div>
+            </div>
+        </div>
+
+        <!-- KPI 2: Monthly Productivity Avg -->
+        <div class="kpi-card" style="--card-color: #2ecc71;">
+            <div class="kpi-icon">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <div class="kpi-content">
+                <h3>Monthly Productivity Avg</h3>
+                <div class="kpi-value" id="kpi-productivity">--</div>
+                <div class="kpi-unit">Mean(score) excl. weekends</div>
+                <div class="formula-tooltip" data-formula="Average of daily productivity scores (weekends excluded)">?
                 </div>
             </div>
-        </main>
+        </div>
+
+        <!-- KPI 3: Avg Completion Ratio -->
+        <div class="kpi-card" style="--card-color: #f39c12;">
+            <div class="kpi-icon">
+                <i class="fas fa-tasks"></i>
+            </div>
+            <div class="kpi-content">
+                <h3>Avg Completion Ratio</h3>
+                <div class="kpi-value" id="kpi-completion">--</div>
+                <div class="kpi-unit">Σ completed / Σ total</div>
+                <div class="formula-tooltip" data-formula="Total Completed Tasks / Total Assigned Tasks × 100">?</div>
+            </div>
+        </div>
+
+        <!-- KPI 4: Total Hours Worked -->
+        <div class="kpi-card" style="--card-color: #e74c3c;">
+            <div class="kpi-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="kpi-content">
+                <h3>Total Hours Worked</h3>
+                <div class="kpi-value" id="kpi-hours">--</div>
+                <div class="kpi-unit">Σ daily hours (current month)</div>
+                <div class="formula-tooltip" data-formula="Sum of daily hours logged in current month">?</div>
+            </div>
+        </div>
     </div>
-    <script src="/static/js/advanced_prediction.js"></script>
 
-    <script type="module" src="{{ url_for('static', filename='js/threejs-scene.js') }}"></script>
-    <script type="module" src="{{ url_for('static', filename='js/charts.js') }}"></script>
-    <script type="module" src="{{ url_for('static', filename='js/lenis-smoothscroll.js') }}"></script>
-    <script type="module" src="{{ url_for('static', filename='js/animations.js') }}"></script>
+    <!-- ------------------------------------------------------- -->
+    <!-- ROW 2: Attendance Heatmap | Attendance Trend -->
+    <!-- ------------------------------------------------------- -->
+    <div class="dashboard-row row-split">
+        <!-- Chart 1: Attendance Heatmap -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title-wrapper">
+                    <h2 class="chart-title"><i class="fas fa-calendar-alt"></i> Attendance Calendar View</h2>
+                    <div class="chart-subtitle">Daily attendance visualization (Present/Absent)</div>
+                </div>
+                <div class="chart-legend">
+                    <span class="legend-item"><i class="fas fa-square" style="color: #2ecc71"></i> Present</span>
+                    <span class="legend-item"><i class="fas fa-square" style="color: #e74c3c"></i> Absent</span>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="attendanceCalendar"></canvas>
+            </div>
+        </div>
 
-</body>
+        <!-- Chart 2: Attendance Trend -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title-wrapper">
+                    <h2 class="chart-title"><i class="fas fa-chart-line"></i> Attendance Consistency Trend</h2>
+                    <div class="chart-subtitle">7-day rolling average showing attendance patterns</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="attendanceConsistency"></canvas>
+            </div>
+        </div>
+    </div>
 
-</html>
+    <!-- ------------------------------------------------------- -->
+    <!-- ROW 3: Productivity Trend | Hours Worked Trend -->
+    <!-- ------------------------------------------------------- -->
+    <div class="dashboard-row row-split">
+        <!-- Chart 3: Productivity Trend -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title-wrapper">
+                    <h2 class="chart-title"><i class="fas fa-bolt"></i> Productivity Score Trend</h2>
+                    <div class="chart-subtitle">Daily performance tracking and analysis</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="productivityTrend"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 4: Hours Worked Trend -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title-wrapper">
+                    <h2 class="chart-title"><i class="fas fa-clock"></i> Hours Worked Trend</h2>
+                    <div class="chart-subtitle">Workload pattern analysis (burnout risk indicator)</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="hoursTrend"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- ROW 4: Task Success Ratio | Attendance vs Productivity Scatter -->
+    <!-- ------------------------------------------------------- -->
+    <div class="dashboard-row row-split">
+        <!-- Chart 5: Task Success Ratio -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title-wrapper">
+                    <h2 class="chart-title"><i class="fas fa-tasks"></i> Task Completion Success Ratio</h2>
+                    <div class="chart-subtitle">Daily task execution quality and efficiency</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="taskCompletion"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 6: Attendance vs Productivity Scatter -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title-wrapper">
+                    <h2 class="chart-title"><i class="fas fa-chart-scatter"></i> Hours vs Productivity Correlation</h2>
+                    <div class="chart-subtitle">Analyzing work efficiency relationship</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="correlationChart"></canvas>
+            </div>
+            <!-- Correlation Insight Box -->
+            <div class="correlation-insight">
+                <strong>Statistical Insight:</strong>
+                <span id="correlationInsightText">
+                    Loading correlation analysis...
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ------------------------------------------------------- -->
+    <!-- ROW 5: Weekly Insights Summary -->
+    <!-- ------------------------------------------------------- -->
+    <div class="dashboard-row row-full">
+        <!-- Chart 7: Weekly Insights -->
+        <div class="chart-card full-width">
+            <div class="chart-header">
+                <div class="chart-title-wrapper">
+                    <h2 class="chart-title"><i class="fas fa-chart-bar"></i> Weekly Performance Insights</h2>
+                    <div class="chart-subtitle">Week-over-week comparative analysis with aggregated metrics</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="weeklyInsights"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formula Definitions Modal -->
+    <div id="formulaModal" class="formula-modal">
+        <div class="formula-content">
+            <h3><i class="fas fa-calculator"></i> KPI Formula Definitions</h3>
+            <div id="formulaDetails"></div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="closeFormulaModal()"
+                    style="padding: 8px 20px; background: var(--accent-color); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 500;">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-footer">
+        <p><span class="footer-highlight">HR Analytics Dashboard v2.0</span> • Professional Edition with ML Insights •
+            Data updated: <span id="data-update-date">--</span> •
+            <button onclick="showAllFormulas()"
+                style="background: none; border: none; color: var(--accent-color); cursor: pointer; text-decoration: underline; font-size: 14px;">
+                <i class="fas fa-info-circle"></i> View All Formula Definitions
+            </button>
+        </p>
+    </div>
+</div>
+
+<!-- Loading Spinner -->
+<div id="loadingSpinner" class="spinner"></div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Single ESM Module for ALL charts -->
+<script type="module" src="{{ url_for('static', filename='js/charts.js') }}"></script>
+
+<script>
+    // Simple DOM helpers that don't conflict with Chart.js
+    function showAllFormulas() {
+        const modal = document.getElementById('formulaModal');
+        const details = document.getElementById('formulaDetails');
+        if (modal && details) {
+            details.innerHTML = `
+                <div class="formula-detail">
+                    <h4><i class="fas fa-percentage"></i> Monthly Attendance %</h4>
+                    <div class="formula-text">Present Days / Working Days × 100</div>
+                    <div class="formula-note">
+                        <i class="fas fa-info-circle"></i> Working days exclude weekends and holidays
+                    </div>
+                </div>
+                
+                <div class="formula-detail">
+                    <h4><i class="fas fa-chart-line"></i> Monthly Productivity Average</h4>
+                    <div class="formula-text">Average of daily productivity scores (weekends excluded)</div>
+                    <div class="formula-note">
+                        <i class="fas fa-info-circle"></i> Uses weighted average for accurate representation
+                    </div>
+                </div>
+                
+                <div class="formula-detail">
+                    <h4><i class="fas fa-tasks"></i> Average Completion Ratio</h4>
+                    <div class="formula-text">Total Completed Tasks / Total Assigned Tasks × 100</div>
+                    <div class="formula-note">
+                        <i class="fas fa-info-circle"></i> Measures task execution efficiency
+                    </div>
+                </div>
+                
+                <div class="formula-detail">
+                    <h4><i class="fas fa-clock"></i> Total Hours Worked</h4>
+                    <div class="formula-text">Sum of daily hours logged in current month</div>
+                    <div class="formula-note">
+                        <i class="fas fa-info-circle"></i> Includes only productive work hours
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'flex';
+        }
+    }
+
+    function closeFormulaModal() {
+        const modal = document.getElementById('formulaModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function (event) {
+        const modal = document.getElementById('formulaModal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // ESC key closes modal
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            const modal = document.getElementById('formulaModal');
+            if (modal) modal.style.display = 'none';
+        }
+    });
+
+    // Formula tooltip click handlers
+    document.addEventListener('DOMContentLoaded', function () {
+        // Add click handlers for formula tooltips
+        document.querySelectorAll('.formula-tooltip').forEach(tooltip => {
+            tooltip.addEventListener('click', function () {
+                const formula = this.getAttribute('data-formula');
+                const modal = document.getElementById('formulaModal');
+                const details = document.getElementById('formulaDetails');
+                if (modal && details) {
+                    details.innerHTML = `
+                        <div class="formula-detail">
+                            <h4><i class="fas fa-calculator"></i> Formula Definition</h4>
+                            <div class="formula-text">${formula}</div>
+                            <div class="formula-note">
+                                <i class="fas fa-info-circle"></i> Based on industry-standard HR analytics methodology
+                            </div>
+                        </div>
+                    `;
+                    modal.style.display = 'flex';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

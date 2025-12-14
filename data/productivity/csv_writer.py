@@ -29,3 +29,6 @@ def update_csv_for_day(date, completed, total):
         writer.writerow(row)
 
     return score
+
+
+

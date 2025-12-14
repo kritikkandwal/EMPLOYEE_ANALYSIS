@@ -21,10 +21,6 @@ class ProductivityApp {
         // Initialize tooltips
         this.initTooltips();
         
-        // Initialize charts if on dashboard
-        if (window.location.pathname === '/dashboard') {
-            this.initDashboardCharts();
-        }
 
         console.log('Productivity App Initialized');
     }
@@ -116,82 +112,7 @@ class ProductivityApp {
         tooltips.forEach(tooltip => tooltip.remove());
     }
 
-    initDashboardCharts() {
-        // Initialize dashboard-specific charts
-        if (typeof window.productivityCharts !== 'undefined') {
-            window.productivityCharts.init();
-        }
-        
-        // Load real data
-        this.loadDashboardData();
-    }
-
-    async loadUserData() {
-        try {
-            const response = await fetch('/api/user/profile');
-            if (response.ok) {
-                this.currentUser = await response.json();
-                this.updateUIWithUserData();
-            }
-        } catch (error) {
-            console.error('Failed to load user data:', error);
-        }
-    }
-
-    async loadDashboardData() {
-        try {
-            const response = await fetch('/api/dashboard/data');
-            if (response.ok) {
-                this.dashboardData = await response.json();
-                this.updateDashboardCharts();
-            }
-        } catch (error) {
-            console.error('Failed to load dashboard data:', error);
-        }
-    }
-
-    updateUIWithUserData() {
-        // Update user-specific elements
-        const userElements = document.querySelectorAll('[data-user]');
-        userElements.forEach(element => {
-            const property = element.dataset.user;
-            if (this.currentUser[property]) {
-                element.textContent = this.currentUser[property];
-            }
-        });
-
-        // Update avatar
-        const avatars = document.querySelectorAll('.user-avatar');
-        avatars.forEach(avatar => {
-            if (this.currentUser.avatar) {
-                avatar.innerHTML = `<img src="${this.currentUser.avatar}" alt="${this.currentUser.username}">`;
-            } else {
-                const initials = this.currentUser.username.charAt(0).toUpperCase();
-                avatar.textContent = initials;
-            }
-        });
-    }
-
-    updateDashboardCharts() {
-        if (!this.dashboardData) return;
-
-        // Update productivity gauge
-        if (window.updateProductivityGauge) {
-            window.updateProductivityGauge(this.dashboardData.currentScore);
-        }
-
-        // Update charts
-        if (window.productivityCharts) {
-            window.productivityCharts.updateProductivityChart(
-                this.dashboardData.dates,
-                this.dashboardData.scores
-            );
-        }
-
-        // Update AI insights
-        this.updateAIInsights(this.dashboardData.insights);
-    }
-
+    
     updateAIInsights(insights) {
         const insightsContainer = document.querySelector('.ai-insights-card');
         if (!insightsContainer || !insights) return;
@@ -368,35 +289,7 @@ class ProductivityApp {
         }
     }
 
-    startRealTimeUpdates() {
-        // Set up real-time updates for dashboard
-        if (window.location.pathname === '/dashboard') {
-            this.setupWebSocket();
-            this.startDataPolling();
-        }
-    }
-
-    setupWebSocket() {
-        // WebSocket for real-time updates
-        try {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}/ws`;
-            this.socket = new WebSocket(wsUrl);
-
-            this.socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                this.handleRealTimeData(data);
-            };
-
-            this.socket.onclose = () => {
-                // Attempt reconnect after delay
-                setTimeout(() => this.setupWebSocket(), 5000);
-            };
-        } catch (error) {
-            console.error('WebSocket connection failed:', error);
-        }
-    }
-
+    
     handleRealTimeData(data) {
         // Update UI with real-time data
         switch (data.type) {
@@ -453,13 +346,6 @@ class ProductivityApp {
         setTimeout(() => {
             badgeAnimation.remove();
         }, 5000);
-    }
-
-    startDataPolling() {
-        // Poll for updates every 30 seconds
-        setInterval(() => {
-            this.loadDashboardData();
-        }, 30000);
     }
 
     setupServiceWorker() {

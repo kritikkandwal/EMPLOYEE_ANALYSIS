@@ -15,11 +15,11 @@
     ]
   },
   "productivity": {
-    "score_today": 100,
+    "score_today": 0,
     "prediction": "",
     "trend": [],
-    "completed_today": 2,
-    "total_today": 2
+    "completed_today": 0,
+    "total_today": 0
   },
   "tasks": {
     "completed_today": 0,
@@ -29,7 +29,7 @@
   },
   "meta": {
     "employee_id": "",
-    "last_update": "2025-12-14T01:31:44",
+    "last_update": "2025-12-14T17:30:49",
     "notes": ""
   }
 }
