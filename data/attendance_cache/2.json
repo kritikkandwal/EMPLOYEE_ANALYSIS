@@ -1486,5 +1486,9 @@
   "2025-12-14": {
     "status": "absent",
     "hours": 0.0
+  },
+  "2025-12-15": {
+    "status": "present",
+    "hours": 0
   }
 }
