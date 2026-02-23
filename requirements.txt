@@ -14,5 +14,6 @@ wtforms==3.0.1
 python-dotenv==1.0.0
 opencv-python==4.8.1.78  # for emotion detection
 mediapipe==0.10.21        # for emotion detection
+gunicorn==21.2.0
 
 
