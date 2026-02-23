@@ -1,5 +1,3 @@
-from routes.attendance_api import attendance_api_bp
-
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, send_file
 from datetime import datetime, timedelta, date
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -26,6 +24,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///productivity.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)                           # <-- FIX: initialize DB correctly
+
+from routes.attendance_api import attendance_api_bp
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
