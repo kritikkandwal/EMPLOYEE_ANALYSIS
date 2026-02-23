@@ -7,7 +7,7 @@ from .database import db
 
 import json
 
-# db = SQLAlchemy()
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'

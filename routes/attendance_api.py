@@ -5,7 +5,7 @@ from datetime import datetime, date, timedelta
 import calendar
 import random
 from sqlalchemy import and_
-from models import db
+from models.database import db
 from models.attendance import AttendanceLog
 from models.attendance_models.predict_attendance import predictor
 from models.attendance_models.attendance_cache import (

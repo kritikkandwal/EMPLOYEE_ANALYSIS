@@ -4,7 +4,7 @@ from models.user import User, ProductivityLog, Badge
 # from ml_models.productivity_predictor import ProductivityPredictor
 from ml_models.badge_recommender import BadgeRecommender
 from datetime import datetime, timedelta
-from extensions import db
+from models.database import db
 import json
 # from routes.dashboard import dashboard_bp
 # app.register_blueprint(dashboard_bp)

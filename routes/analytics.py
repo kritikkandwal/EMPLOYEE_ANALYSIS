@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
 from models.user import ProductivityLog, Badge
 from datetime import datetime, timedelta
-from extensions import db
+from models.database import db
 import json
 
 analytics_bp = Blueprint('analytics', __name__)

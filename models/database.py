@@ -10,23 +10,23 @@ class Base(DeclarativeBase):
 # Initialize SQLAlchemy
 db = SQLAlchemy(model_class=Base)
 
-def init_db(app):
-    """Initialize database with the Flask app"""
-    db.init_app(app)
+# def init_db(app):
+#     """Initialize database with the Flask app"""
+#     db.init_app(app)
     
-    with app.app_context():
-        # Import all models here to ensure they are registered with SQLAlchemy
-        from .user import User, ProductivityLog, Badge
+#     with app.app_context():
+#         # Import all models here to ensure they are registered with SQLAlchemy
+#         from .user import User, ProductivityLog, Badge
         
-        # Create all tables
-        db.create_all()
+#         # Create all tables
+#         db.create_all()
         
-        # Create admin user if doesn't exist
-        create_initial_data()
+#         # Create admin user if doesn't exist
+#         create_initial_data()
 
 def create_initial_data():
     """Create initial database data"""
-    from .user import User, db
+    from .user import User
     
     # Check if admin user exists
     admin = User.query.filter_by(email='admin@productivity.ai').first()
