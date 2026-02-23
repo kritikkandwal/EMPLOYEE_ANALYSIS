@@ -1,5 +1,5 @@
 {
-  "date": "2026-02-22",
+  "date": "2026-02-23",
   "attendance": {
     "status_today": "",
     "prediction": 71.0,
@@ -27,7 +27,7 @@
   },
   "meta": {
     "employee_id": "",
-    "last_update": "2026-02-22T14:05:13",
+    "last_update": "2026-02-23T17:07:07",
     "notes": ""
   }
 }
