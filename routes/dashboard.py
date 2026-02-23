@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
 from models.user import User, ProductivityLog, Badge
-from ml_models.productivity_predictor import ProductivityPredictor
+# from ml_models.productivity_predictor import ProductivityPredictor
 from ml_models.badge_recommender import BadgeRecommender
 from datetime import datetime, timedelta
 from extensions import db

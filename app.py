@@ -31,7 +31,10 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
 # Instantiate global productivity forecaster
-productivity_forecaster = ProductivityForecaster(data_path='data/')
+productivity_forecaster = ProductivityForecaster(
+    data_path='data/productivity/'
+)
+
 
 
 @login_manager.user_loader

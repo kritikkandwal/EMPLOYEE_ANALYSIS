@@ -1,9 +1,9 @@
 {
-  "date": "2025-12-15",
+  "date": "2026-02-22",
   "attendance": {
     "status_today": "",
-    "prediction": 92.9,
-    "absence_likelihood": "low",
+    "prediction": 71.0,
+    "absence_likelihood": "medium",
     "trend": [
       100.0,
       100.0,
@@ -17,9 +17,7 @@
   "productivity": {
     "score_today": 0,
     "prediction": "",
-    "trend": [],
-    "completed_today": 0,
-    "total_today": 0
+    "trend": []
   },
   "tasks": {
     "completed_today": 0,
@@ -29,7 +27,7 @@
   },
   "meta": {
     "employee_id": "",
-    "last_update": "2025-12-15T11:30:15",
+    "last_update": "2026-02-22T14:05:13",
     "notes": ""
   }
 }
