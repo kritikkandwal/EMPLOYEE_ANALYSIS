@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
-from models.user import User, ProductivityLog, Badge, db
+from models.user import User, ProductivityLog, Badge
+from models.database import db
 from datetime import datetime, timedelta
 import pandas as pd
 from models.database import db
