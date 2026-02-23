@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Flask==2.3.3
 Flask-SQLAlchemy==3.0.5
 Flask-Login==0.6.3
@@ -14,3 +15,24 @@ wtforms==3.0.1
 python-dotenv==1.0.0
 opencv-python==4.8.1.78  # for emotion detection
 mediapipe==0.10.0        # for emotion detection
+=======
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+Flask-Login==0.6.3
+Flask-WTF==1.1.1
+Werkzeug==2.3.7
+numpy==1.24.3
+pandas==2.0.3
+scikit-learn==1.3.0
+xgboost==1.7.6
+lightgbm==4.1.0
+matplotlib==3.7.2
+plotly==5.15.0
+wtforms==3.0.1
+python-dotenv==1.0.0
+opencv-python==4.8.1.78  # for emotion detection
+mediapipe==0.10.21        # for emotion detection
+gunicorn==21.2.0
+
+
+>>>>>>> 3e5cd9c767e7c22b20db524d99ac2480e355b288
