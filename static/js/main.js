@@ -17,10 +17,10 @@ class ProductivityApp {
     initializeApp() {
         // Set theme based on user preference or time of day
         this.setThemeBasedOnTime();
-        
+
         // Initialize tooltips
         this.initTooltips();
-        
+
 
         console.log('Productivity App Initialized');
     }
@@ -47,7 +47,10 @@ class ProductivityApp {
         // Form submissions
         const forms = document.querySelectorAll('form');
         forms.forEach(form => {
-            form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+            // Skip AJAX if explicitly disabled
+            if (form.dataset.ajax !== "false") {
+                form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+            }
         });
 
         // Responsive menu
@@ -60,11 +63,11 @@ class ProductivityApp {
     setThemeBasedOnTime() {
         const hour = new Date().getHours();
         const isDarkHours = hour < 6 || hour > 18; // 6 PM to 6 AM
-        
+
         if (isDarkHours && !localStorage.getItem('theme')) {
             document.body.classList.add('dark-theme');
         }
-        
+
         // Load saved theme preference
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) {
@@ -75,7 +78,7 @@ class ProductivityApp {
     toggleTheme() {
         const isDark = document.body.classList.toggle('dark-theme');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        
+
         // Update theme toggle icon
         const themeIcon = document.querySelector('#theme-toggle i');
         if (themeIcon) {
@@ -86,7 +89,7 @@ class ProductivityApp {
     initTooltips() {
         // Initialize tooltips for interactive elements
         const tooltipElements = document.querySelectorAll('[data-tooltip]');
-        
+
         tooltipElements.forEach(element => {
             element.addEventListener('mouseenter', this.showTooltip);
             element.addEventListener('mouseleave', this.hideTooltip);
@@ -98,9 +101,9 @@ class ProductivityApp {
         const tooltip = document.createElement('div');
         tooltip.className = 'tooltip';
         tooltip.textContent = tooltipText;
-        
+
         document.body.appendChild(tooltip);
-        
+
         // Position tooltip
         const rect = e.currentTarget.getBoundingClientRect();
         tooltip.style.left = rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + 'px';
@@ -112,7 +115,7 @@ class ProductivityApp {
         tooltips.forEach(tooltip => tooltip.remove());
     }
 
-    
+
     updateAIInsights(insights) {
         const insightsContainer = document.querySelector('.ai-insights-card');
         if (!insightsContainer || !insights) return;
@@ -132,7 +135,7 @@ class ProductivityApp {
 
     handleSearch(e) {
         const searchTerm = e.target.value.toLowerCase();
-        
+
         // Implement search functionality
         if (searchTerm.length > 2) {
             this.performSearch(searchTerm);
@@ -237,10 +240,10 @@ class ProductivityApp {
 
     async handleFormSubmit(e) {
         e.preventDefault();
-        
+
         const form = e.target;
         const formData = new FormData(form);
-        
+
         try {
             const response = await fetch(form.action, {
                 method: form.method,
@@ -280,7 +283,7 @@ class ProductivityApp {
 
     handleFormError(form, error) {
         console.error('Form submission error:', error);
-        
+
         if (window.dashboardAnimations) {
             window.dashboardAnimations.showNotification(
                 'An error occurred. Please try again.',
@@ -289,7 +292,7 @@ class ProductivityApp {
         }
     }
 
-    
+
     handleRealTimeData(data) {
         // Update UI with real-time data
         switch (data.type) {

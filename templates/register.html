@@ -3,108 +3,200 @@
 {% block title %}Register - AI Productivity Intelligence{% endblock %}
 
 {% block content %}
-<div class="auth-container">
+<div class="auth-page">
     <div class="auth-card glass-card">
+
         <div class="auth-header">
-            <h1 class="auth-title">
+            <h1>
                 <i class="fas fa-user-plus"></i>
                 Create Account
             </h1>
-            <p class="auth-subtitle">Join our productivity revolution</p>
+            <p>Join our productivity revolution</p>
         </div>
 
-        <form method="POST" action="{{ url_for('register') }}" class="auth-form">
-            <div class="form-group">
-                <label for="username" class="form-label">
-                    <i class="fas fa-user"></i>
-                    Username
-                </label>
-                <input type="text" name="username" class="form-input" placeholder="Choose a username" required>
+        <form method="POST" action="{{ url_for('register') }}" data-ajax="false" class="auth-form">
+
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" name="username" placeholder="Choose a username" required>
             </div>
 
-            <div class="form-group">
-                <label for="email" class="form-label">
-                    <i class="fas fa-envelope"></i>
-                    Email Address
-                </label>
-                <input type="email" name="email" class="form-input" placeholder="Enter your email" required>
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" name="email" placeholder="Enter your email" required>
             </div>
 
-            <div class="form-group">
-                <label for="password" class="form-label">
-                    <i class="fas fa-lock"></i>
-                    Password
-                </label>
-                <input type="password" name="password" class="form-input" placeholder="Create a password" required>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" name="password" placeholder="Create a password" required>
             </div>
 
-            <div class="form-group">
-                <label for="department" class="form-label">
-                    <i class="fas fa-building"></i>
-                    Department
-                </label>
-                <input type="text" name="department" class="form-input" placeholder="Your department">
+            <div class="input-group">
+                <i class="fas fa-building"></i>
+                <input type="text" name="department" placeholder="Your department">
             </div>
 
-            <div class="form-group">
-                <label for="position" class="form-label">
-                    <i class="fas fa-briefcase"></i>
-                    Position
-                </label>
-                <input type="text" name="position" class="form-input" placeholder="Your position">
+            <div class="input-group">
+                <i class="fas fa-briefcase"></i>
+                <input type="text" name="position" placeholder="Your position">
             </div>
 
-            <button type="submit" class="btn btn-primary auth-btn">Register</button>
+            <button type="submit" class="register-btn">
+                Create Account
+            </button>
+
         </form>
 
         <div class="auth-footer">
-            <p>Already have an account? 
-                <a href="{{ url_for('login') }}" class="auth-link">Sign in here</a>
-            </p>
+            Already have an account?
+            <a href="{{ url_for('login') }}">Sign in here</a>
         </div>
 
         <div class="benefits">
-            <h4>Start your productivity journey:</h4>
-            <ul class="benefits-list">
+            <h4>Why join us?</h4>
+            <ul>
                 <li><i class="fas fa-check"></i> AI-powered personal insights</li>
                 <li><i class="fas fa-check"></i> Smart productivity tracking</li>
                 <li><i class="fas fa-check"></i> Gamified achievement system</li>
                 <li><i class="fas fa-check"></i> Predictive analytics</li>
             </ul>
         </div>
+
     </div>
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
+/* ===== Layout ===== */
+
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 520px;
+    padding: 3rem;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(0,255,255,0.2);
+    box-shadow: 0 20px 60px rgba(0,255,255,0.15);
+    transition: 0.3s ease;
+}
+
+.auth-card:hover {
+    box-shadow: 0 25px 80px rgba(0,255,255,0.25);
+}
+
+/* ===== Header ===== */
+
+.auth-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.auth-header p {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+/* ===== Inputs ===== */
+
+.input-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.input-group i {
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    transform: translateY(-50%);
+    color: var(--accent-glow);
+    font-size: 0.9rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 14px 14px 14px 45px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--accent-glow);
+    box-shadow: 0 0 15px rgba(0,255,255,0.5);
+}
+
+/* ===== Button ===== */
+
+.register-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(90deg, #00ffff, #00ff99);
+    color: black;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.register-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0,255,255,0.4);
+}
+
+/* ===== Footer ===== */
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.auth-footer a {
+    color: var(--accent-glow);
+    text-decoration: none;
+}
+
+/* ===== Benefits ===== */
+
 .benefits {
     margin-top: 2rem;
     padding-top: 1.5rem;
-    border-top: 1px solid var(--glass-border);
+    border-top: 1px solid rgba(255,255,255,0.1);
 }
 
 .benefits h4 {
     margin-bottom: 1rem;
-    color: var(--text-primary);
 }
 
-.benefits-list {
+.benefits ul {
     list-style: none;
     padding: 0;
 }
 
-.benefits-list li {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
+.benefits li {
+    margin-bottom: 0.6rem;
     color: var(--text-secondary);
 }
 
-.benefits-list i {
+.benefits i {
     color: var(--accent-glow);
-    margin-right: 0.5rem;
-    font-size: 0.875rem;
+    margin-right: 8px;
 }
 </style>
 {% endblock %}

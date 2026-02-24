@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,32 +10,35 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
+
 <body class="futuristic-theme">
     <!-- Three.js Background -->
     <div id="three-background" class="three-background"></div>
-    
+
     <!-- Main Content -->
     <div class="app-container">
         {% if current_user.is_authenticated %}
-            {% include 'components/sidebar.html' %}
+        {% include 'components/sidebar.html' %}
         {% endif %}
-        
+
         <main class="main-content {% if not current_user.is_authenticated %}full-width{% endif %}">
             {% if current_user.is_authenticated %}
-                {% include 'components/navbar.html' %}
+            {% include 'components/navbar.html' %}
             {% endif %}
-            
+
             <div class="content-wrapper">
                 {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }} glow-effect">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
+                {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
                 {% endwith %}
-                
+
                 {% block content %}{% endblock %}
             </div>
         </main>
@@ -45,7 +49,8 @@
     <script src="{{ url_for('static', filename='js/lenis-smoothscroll.js') }}"></script>
     <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
+
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>
