@@ -26,6 +26,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)                           # <-- FIX: initialize DB correctly
 
 from routes.attendance_api import attendance_api_bp
+from routes.analytics import analytics_bp
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -384,10 +385,14 @@ def download_attendance_data():
         return jsonify({'error': str(e)}), 500
 
 
+# REGISTER BLUEPRINTS
 app.register_blueprint(attendance_api_bp, url_prefix="/api/attendance")
-# REGISTER PRODUCTIVITY BLUEPRINTS
-from routes.predictions_api import predictions_bp, productivity_bp
 
+# Analytics routes (task analysis, leaderboard, time tracking, update productivity)
+app.register_blueprint(analytics_bp)
+
+# Productivity ML APIs
+from routes.predictions_api import predictions_bp, productivity_bp
 app.register_blueprint(predictions_bp)
 app.register_blueprint(productivity_bp)
 
@@ -398,24 +403,24 @@ app.register_blueprint(productivity_bp)
 def dashboard_data():
     return jsonify(load_dashboard_data())
 
-@app.route('/api/update-productivity', methods=['POST'])
-@login_required
-def api_update_productivity():
-    data = request.json
-    date = data.get("date")
-    completed = data.get("completed", 0)
-    total = data.get("total", 0)
-    score = data.get("score", 0)
+# @app.route('/api/update-productivity', methods=['POST'])
+# @login_required
+# def api_update_productivity():
+#     data = request.json
+#     date = data.get("date")
+#     completed = data.get("completed", 0)
+#     total = data.get("total", 0)
+#     score = data.get("score", 0)
 
-    productivity_forecaster.update_today(
-    current_user.id,
-    today_score=score,
-    completed=completed,
-    total=total
-    )
+#     productivity_forecaster.update_today(
+#     current_user.id,
+#     today_score=score,
+#     completed=completed,
+#     total=total
+#     )
 
 
-    return jsonify({"status": "success", "message": "Productivity updated"})
+#     return jsonify({"status": "success", "message": "Productivity updated"})
 
 
 # -----------------------------------

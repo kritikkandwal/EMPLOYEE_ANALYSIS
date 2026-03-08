@@ -21,6 +21,8 @@ class AttendancePredictor:
     def load_data(self):
         if os.path.exists(self.data_path):
             df = pd.read_csv(self.data_path)
+            if "hours" not in df.columns:
+                df["hours"] = 0
             df['date'] = pd.to_datetime(df['date'])
             df = df.sort_values('date')
 
@@ -37,16 +39,46 @@ class AttendancePredictor:
             return df
 
         return self.create_sample_data()
+    def update_today_attendance(self, status, hours):
+
+        df = self.load_data()
+
+        today = pd.to_datetime(datetime.now().date())
+
+        if today in df['date'].values:
+
+            df.loc[df['date'] == today, 'attendance'] = status
+            df.loc[df['date'] == today, 'hours'] = hours
+
+        else:
+
+            new_row = {
+                "date": today,
+                "attendance": status,
+                "day_of_week": today.weekday(),
+                "month": today.month,
+                "hours": hours
+            }
+
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+        df.to_csv(self.data_path, index=False)
+
+        return {
+            "status": status,
+            "hours": hours
+        }
 
     def create_sample_data(self):
         dates = pd.date_range(start='2024-01-01', end=datetime.now().date())
         attendance = np.random.binomial(1, 0.85, len(dates))
 
         df = pd.DataFrame({
-            'date': dates,
-            'attendance': attendance,
-            'day_of_week': [d.weekday() for d in dates],
-            'month': [d.month for d in dates]
+        'date': dates,
+        'attendance': attendance,
+        'day_of_week': [d.weekday() for d in dates],
+        'month': [d.month for d in dates],
+        'hours': np.random.uniform(5, 9, len(dates))
         })
 
         df.to_csv(self.data_path, index=False)

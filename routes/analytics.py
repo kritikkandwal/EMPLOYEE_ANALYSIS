@@ -4,6 +4,7 @@ from models.user import ProductivityLog, Badge
 from datetime import datetime, timedelta
 from models.database import db
 import json
+from utils.productivity_csv_manager import update_today_productivity
 
 analytics_bp = Blueprint('analytics', __name__)
 
@@ -240,3 +241,25 @@ def calculate_user_rank(user_id, leaderboard_data):
             }
     
     return {'rank': 0, 'score': 0, 'badges': 0, 'trend': 'stable'}
+
+@analytics_bp.route('/api/update-productivity', methods=['POST'])
+@login_required
+def update_productivity():
+
+    data = request.json
+
+    completed = data.get("completed", 0)
+    total = data.get("total", 0)
+
+    score = update_today_productivity(
+        current_user.id,
+        completed,
+        total
+    )
+
+    return jsonify({
+        "success": True,
+        "score": score,
+        "completed": completed,
+        "total": total
+    })

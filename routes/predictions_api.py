@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, request
 from analytics_store import update_whole_section
 from ml_models.productivity_forecaster import ProductivityForecaster
 from flask import request
+from flask_login import login_required, current_user
 
 predictions_bp = Blueprint("predictions_bp", __name__)
 productivity_bp = Blueprint("productivity", __name__, url_prefix="/api/productivity")
@@ -161,9 +162,10 @@ def predict_productivity():
 # =====================================================================
 
 @predictions_bp.route("/api/update-productivity", methods=["POST"])
+@login_required
 def update_productivity():
-    import datetime
     from data.productivity.csv_writer import update_csv_for_day
+    import datetime
 
     data = request.get_json() or {}
 
@@ -174,18 +176,28 @@ def update_productivity():
     if not date:
         date = datetime.date.today().isoformat()
 
-    # Calculate score + write CSV
+    # 1️⃣ Update CSV (heatmap source of truth)
     score = update_csv_for_day(date, completed, total)
 
-    # Save to analytics_store.json
+    # 2️⃣ Update ML forecaster
+    forecaster.update_today(
+        user_id=current_user.id,
+        today_score=score,
+        completed=completed,
+        total=total
+    )
+
+    # 3️⃣ (Optional) Update analytics JSON
     update_whole_section("productivity", {
         "score_today": score,
         "completed_today": completed,
         "total_today": total
     })
 
-    return {"success": True, "saved": True, "score": score}
-
+    return jsonify({
+        "success": True,
+        "score": score
+    })
 
 @productivity_bp.route("/yearly_csv")
 def yearly_from_csv():
@@ -198,7 +210,7 @@ def yearly_from_csv():
             reader = csv.DictReader(f)
             for row in reader:
                 date = row["date"]
-                score = int(row["score"])
+                score = int(float(row["score"]))
                 completed = int(row["completed"])
                 total = int(row["total"])
 
