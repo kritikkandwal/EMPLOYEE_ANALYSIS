@@ -274,9 +274,14 @@ def month_productivity_stats():
 @app.route('/get-productivity-trends')
 @login_required
 def get_productivity_trends():
-    """
-    Returns historical + forecast productivity data for charts.
-    """
+
+    global productivity_forecaster
+
+    if productivity_forecaster is None:
+        productivity_forecaster = ProductivityForecaster(
+            data_path='data/productivity/'
+        )
+
     history_days = request.args.get('history_days', default=30, type=int)
     horizon = request.args.get('horizon', default=7, type=int)
 
@@ -285,6 +290,7 @@ def get_productivity_trends():
         history_days=history_days,
         horizon=horizon
     )
+
     return jsonify(data)
 
 
