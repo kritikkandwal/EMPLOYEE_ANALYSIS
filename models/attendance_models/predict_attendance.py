@@ -126,27 +126,27 @@ class AttendancePredictor:
 
     def predict_all(self):
 
-    # Return cached predictions if already computed
+    # return cached result if already computed
         if hasattr(self, "cached_predictions"):
             return self.cached_predictions
-
+    
         df = self.load_data()
-
+    
         self._load_lr()
         self._load_prophet()
         self._load_lstm()
-
+    
         lr_pred = self.lr_model.predict(df)
         prophet_preds, forecast_plot = self.prophet_model.predict(df, days=7)
         lstm_pred = self.lstm_model.predict(df)
-
+    
         tomorrow = prophet_preds[0]
-
+    
         ensemble = (lr_pred + lstm_pred + tomorrow) / 3
         absence_likelihood = 1 - ensemble
-
+    
         streak_forecast = self.calculate_streak_forecast(df, ensemble)
-
+    
         result = {
             "lr_prediction": round(lr_pred, 3),
             "prophet_prediction": round(tomorrow, 3),
@@ -157,10 +157,8 @@ class AttendancePredictor:
             "absence_likelihood": round(absence_likelihood, 3),
             "average_prediction": round(ensemble, 3)
         }
-
-    # Cache the result
+    
         self.cached_predictions = result
-
         return result
 
     # -----------------------
