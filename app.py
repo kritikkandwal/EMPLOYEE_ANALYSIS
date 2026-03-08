@@ -32,9 +32,7 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
 # Instantiate global productivity forecaster
-productivity_forecaster = ProductivityForecaster(
-    data_path='data/productivity/'
-)
+productivity_forecaster = None
 
 
 
@@ -231,14 +229,14 @@ def punch_today():
 @app.route('/predict-productivity')
 @login_required
 def predict_productivity():
-    """
-    AI block for productivity predictions.
 
-    Optional query parameters (taken from today's real data):
-      today_score: float (0-100)
-      completed: int
-      total: int
-    """
+    global productivity_forecaster
+
+    if productivity_forecaster is None:
+        productivity_forecaster = ProductivityForecaster(
+            data_path='data/productivity/'
+        )
+
     today_score = request.args.get('today_score', type=float)
     completed = request.args.get('completed', type=int)
     total = request.args.get('total', type=int)
@@ -249,8 +247,8 @@ def predict_productivity():
         completed=completed,
         total=total
     )
-    return jsonify(summary)
 
+    return jsonify(summary)
 
 @app.route('/month-productivity-stats')
 @login_required
